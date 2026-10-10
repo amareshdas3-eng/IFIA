@@ -1,0 +1,54 @@
+{
+  "name": "industrial-failure-intelligence-agent",
+  "version": "1.0.0",
+  "description": "Engineering-grade LLM-Driven Shutdown & Failure RCA Agent with Evidence Contract, Human-in-the-loop Governance & CMMS Integration",
+  "main": "server/index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "tsx server/index.ts",
+    "server": "tsx watch server/index.ts",
+    "client": "vite --prefix client",
+    "build:client": "vite build client",
+    "build:server": "tsc -p tsconfig.server.json",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT\" -c \"cyan.bold,blue.bold\" \"tsx watch server/index.ts\" \"vite client --port 5173\"",
+    "test": "node --import tsx --test server/tests/adversarialSecurity.test.ts server/tests/cmmsAdapter.test.ts server/tests/evidenceContract.test.ts server/tests/qaAuditor.test.ts",
+    "benchmark": "tsx server/scripts/runBenchmark.ts"
+  },
+  "keywords": [
+    "rca",
+    "reliability-engineering",
+    "claude-api",
+    "electrical-engineering",
+    "cmms",
+    "root-cause-analysis"
+  ],
+  "author": "Industrial Failure Intelligence Agent Team",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "lucide-react": "^1.16.0",
+    "uuid": "^11.1.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.10",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.6.1",
+    "concurrently": "^9.1.2",
+    "postcss": "^8.5.29",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.1"
+  }
+}

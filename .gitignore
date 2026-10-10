@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Production and build outputs
+dist/
+client/dist/
+
+# Local Environment Variables and Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Data store runtime mutation data (seed files are preserved in server/data/)
+data_store/*.json
+!data_store/.gitkeep
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.vite/
+.vite-temp/
+IFIA-clean-export.zip

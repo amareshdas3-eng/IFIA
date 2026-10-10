@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #070d19;
+  --bg-secondary: #0d1629;
+  --bg-card: #131f38;
+  --bg-card-hover: #1a2a4b;
+  --border-color: #1e3156;
+  --border-highlight: #0284c7;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --accent-cyan: #38bdf8;
+  --accent-blue: #0284c7;
+  --status-approved: #10b981;
+  --status-pending: #f59e0b;
+  --status-rejected: #ef4444;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Glassmorphism & Panel Styling */
+.card-panel {
+  background: linear-gradient(180deg, rgba(19, 31, 56, 0.95) 0%, rgba(13, 22, 41, 0.95) 100%);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+}
+
+.card-panel-hover {
+  transition: all 0.2s ease-in-out;
+}
+.card-panel-hover:hover {
+  border-color: var(--accent-blue);
+  box-shadow: 0 6px 24px -2px rgba(2, 132, 199, 0.2);
+}
+
+.subtle-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+}
+
+/* Print Styling for Official Engineering RCA Report */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .card-panel {
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+  }
+}
