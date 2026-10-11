@@ -156,12 +156,22 @@ export const HumanApprovalRecordSchema = z.object({
     'LEAD_ELECTRICAL_ENGINEER',
     'SENIOR_RELIABILITY_ENGINEER',
     'PLANT_MAINTENANCE_MANAGER',
-    'CHIEF_ENGINEERING_OFFICER'
+    'CHIEF_ENGINEERING_OFFICER',
+    'RELIABILITY_DIRECTOR',
+    'PLANT_OPERATIONS_MANAGER'
   ]),
+  reviewer_id: z.string().optional(),
+  reviewer_license: z.string().optional(),
   decision: z.enum(['ACCEPTED', 'REJECTED', 'MODIFIED', 'REQUEST_MORE_EVIDENCE']),
   notes: z.string(),
   timestamp: z.string(),
   review_duration_minutes: z.number().min(0)
+});
+
+export const ApprovalDecisionRequestSchema = z.object({
+  decision: z.enum(['ACCEPTED', 'REJECTED', 'MODIFIED', 'REQUEST_MORE_EVIDENCE']),
+  notes: z.string().min(5, 'Engineering justification notes are required'),
+  review_duration_minutes: z.number().min(1).default(15)
 });
 
 export const RCACaseSchema = z.object({

@@ -10,11 +10,42 @@ import { approvalsRouter } from './routes/approvals.js';
 import { cmmsRouter } from './routes/cmms.js';
 import { benchmarkRouter } from './routes/benchmark.js';
 import { auditRouter } from './routes/audit.js';
+import { authService, CERTIFIED_PRINCIPALS } from './services/authService.js';
+import { optionalAuthenticateUser } from './middleware/auth.js';
 
-const app = express();
+export const app = express();
 
-app.use(cors());
+// Restrictive CORS Allowlist (IFIA-SEC-003)
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser callers (server-to-server, curl, tests) or explicitly configured origins
+    if (
+      !origin ||
+      config.allowedOrigins.includes(origin) ||
+      config.nodeEnv === 'development'
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS Security Violation: Origin '${origin}' is not authorized.`));
+    }
+  },
+  methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
+
+// Defensive Security Headers
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'geolocation=(), camera=(), microphone=()');
+  next();
+});
 
 // Initialize DB and ensure seed cases exist
 db.init();
@@ -22,6 +53,62 @@ if (db.getCases().length === 0) {
   syntheticCases.forEach(c => db.saveCase(c));
   console.log('Seeded initial synthetic industrial electrical cases.');
 }
+
+// Demo-only token issuance. Never issue production identities from a client-supplied username.
+app.post('/api/auth/token', (req, res) => {
+  if (config.nodeEnv === 'production') {
+    res.status(404).json({
+      success: false,
+      code: 'DEMO_TOKEN_ISSUANCE_DISABLED',
+      message: 'Demo persona token issuance is disabled in production. Configure a verified identity provider.'
+    });
+    return;
+  }
+
+  const { username } = req.body || {};
+  if (!username || typeof username !== 'string') {
+    res.status(400).json({
+      success: false,
+      code: 'AUTH_INVALID_REQUEST',
+      message: 'Username is required to issue signed credentials'
+    });
+    return;
+  }
+
+  const token = authService.issueTokenForPrincipal(username.trim());
+  if (!token) {
+    res.status(404).json({
+      success: false,
+      code: 'AUTH_USER_NOT_FOUND',
+      message: `Unregistered or unauthorized engineering principal: '${username}'`
+    });
+    return;
+  }
+
+  const principal = CERTIFIED_PRINCIPALS[username.trim()];
+  res.json({
+    success: true,
+    token,
+    user: principal
+  });
+});
+
+
+app.get('/api/auth/me', optionalAuthenticateUser, (req, res) => {
+  if (req.user) {
+    res.json({
+      success: true,
+      authenticated: true,
+      user: req.user
+    });
+  } else {
+    res.json({
+      success: true,
+      authenticated: false,
+      user: null
+    });
+  }
+});
 
 // API Routes
 app.use('/api/cases', casesRouter);
@@ -39,6 +126,13 @@ app.get('/api/health', (_req, res) => {
     mode: config.nodeEnv,
     cmms_mode: config.cmmsMode,
     claude_live_api: Boolean(config.anthropicApiKey),
+    security_controls: {
+      auth_middleware_active: true,
+      role_authorization_enforced: true,
+      audit_integrity_sha256_chained: true,
+      prompt_injection_shield: config.enablePromptInjectionShield,
+      human_approval_mandatory_for_cmms: config.requireHumanApprovalForCmms
+    },
     timestamp: new Date().toISOString()
   });
 });
@@ -52,11 +146,30 @@ if (fs.existsSync(clientDist)) {
   });
 }
 
-app.listen(config.port, () => {
-  console.log(`================================================================`);
-  console.log(`  IFIA - Industrial Failure Intelligence Agent Server Running   `);
-  console.log(`  Port: http://localhost:${config.port}                         `);
-  console.log(`  CMMS Mode: ${config.cmmsMode}                                 `);
-  console.log(`  Live Claude API: ${config.anthropicApiKey ? 'ACTIVE' : 'FALLBACK_ENGINE (OFFLINE SAFE)'}`);
-  console.log(`================================================================`);
-});
+const isTestMode =
+  process.env.NODE_ENV === 'test' ||
+  process.env.npm_lifecycle_event === 'test' ||
+  process.argv.includes('--test') ||
+  Boolean(process.env.NODE_TEST_CONTEXT);
+
+const isDirectExecution = Boolean(
+  process.argv[1] &&
+    (process.argv[1].endsWith('server/index.ts') ||
+      process.argv[1].endsWith('server\\index.ts') ||
+      process.argv[1].endsWith('server/index.js') ||
+      process.argv[1].endsWith('server\\index.js') ||
+      process.argv[1].endsWith('dist-server/index.js') ||
+      process.argv[1].endsWith('dist-server\\index.js'))
+);
+
+if (isDirectExecution && !isTestMode) {
+  app.listen(config.port, () => {
+    console.log(`================================================================`);
+    console.log(`  IFIA - Industrial Failure Intelligence Agent Server Running   `);
+    console.log(`  Port: http://localhost:${config.port}                         `);
+    console.log(`  CMMS Mode: ${config.cmmsMode}                                 `);
+    console.log(`  Auth & Role Gates: ACTIVE (Engineering RBAC)                  `);
+    console.log(`  Live Claude API: ${config.anthropicApiKey ? 'ACTIVE' : 'FALLBACK_ENGINE (OFFLINE SAFE)'}`);
+    console.log(`================================================================`);
+  });
+}

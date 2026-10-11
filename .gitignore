@@ -4,6 +4,7 @@ node_modules/
 
 # Production and build outputs
 dist/
+dist-server/
 client/dist/
 
 # Local Environment Variables and Secrets

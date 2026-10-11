@@ -5,14 +5,15 @@
   "main": "server/index.ts",
   "type": "module",
   "scripts": {
-    "start": "tsx server/index.ts",
+    "start": "node dist-server/index.js",
     "server": "tsx watch server/index.ts",
     "client": "vite --prefix client",
     "build:client": "vite build client",
     "build:server": "tsc -p tsconfig.server.json",
     "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT\" -c \"cyan.bold,blue.bold\" \"tsx watch server/index.ts\" \"vite client --port 5173\"",
-    "test": "node --import tsx --test server/tests/adversarialSecurity.test.ts server/tests/cmmsAdapter.test.ts server/tests/evidenceContract.test.ts server/tests/qaAuditor.test.ts",
-    "benchmark": "tsx server/scripts/runBenchmark.ts"
+    "test": "node --import tsx --test server/tests/adversarialSecurity.test.ts server/tests/auditIntegrity.test.ts server/tests/authorization.test.ts server/tests/cmmsAdapter.test.ts server/tests/evidenceContract.test.ts server/tests/qaAuditor.test.ts server/tests/e2eValidation.test.ts",
+    "benchmark": "tsx server/scripts/runBenchmark.ts",
+    "build:server:emit": "tsc -p tsconfig.build.json"
   },
   "keywords": [
     "rca",

@@ -1,6 +1,52 @@
 import React from 'react';
 import { RCACase } from '../types';
-import { ShieldCheck, AlertTriangle, CheckCircle2, RotateCw, PlusCircle, Printer, Cpu } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, CheckCircle2, RotateCw, PlusCircle, Printer, Cpu, UserCheck, KeyRound } from 'lucide-react';
+
+export interface EngineerPersona {
+  username: string;
+  name: string;
+  role: string;
+  label: string;
+  isAuthorizedToApprove: boolean;
+}
+
+export const AVAILABLE_PERSONAS: EngineerPersona[] = [
+  {
+    username: 'alex.henderson',
+    name: 'Alex Henderson, PE',
+    role: 'LEAD_ELECTRICAL_ENGINEER',
+    label: 'Alex Henderson, PE (Lead Engineer — Authorized)',
+    isAuthorizedToApprove: true
+  },
+  {
+    username: 'jane.smith',
+    name: 'Dr. Jane Smith, PE',
+    role: 'RELIABILITY_DIRECTOR',
+    label: 'Dr. Jane Smith, PE (Director — Authorized)',
+    isAuthorizedToApprove: true
+  },
+  {
+    username: 'marcus.vance',
+    name: 'Marcus Vance, CMRP',
+    role: 'MAINTENANCE_SUPERVISOR',
+    label: 'Marcus Vance (Supervisor — Dispatch Only)',
+    isAuthorizedToApprove: false
+  },
+  {
+    username: 'david.chen',
+    name: 'David Chen, NETA',
+    role: 'TECHNICIAN',
+    label: 'David Chen (Technician — Read Only)',
+    isAuthorizedToApprove: false
+  },
+  {
+    username: 'anonymous',
+    name: 'Anonymous Caller',
+    role: 'ANONYMOUS',
+    label: 'Anonymous Caller (Unauthenticated — Blocked)',
+    isAuthorizedToApprove: false
+  }
+];
 
 interface HeaderProps {
   currentCase: RCACase | null;
@@ -9,6 +55,10 @@ interface HeaderProps {
   onNewCase: () => void;
   onResetSeed: () => void;
   onPrintReport: () => void;
+  activeUsername: string;
+  onSelectPersona: (username: string) => void;
+  onVerifyAuditTrail: () => void;
+  publicDemoMode?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,8 +67,15 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectCase,
   onNewCase,
   onResetSeed,
-  onPrintReport
+  onPrintReport,
+  activeUsername,
+  onSelectPersona,
+  onVerifyAuditTrail,
+  publicDemoMode = false
 }) => {
+  const currentPersona = AVAILABLE_PERSONAS.find(p => p.username === activeUsername) || AVAILABLE_PERSONAS[0];
+
+
   const getStatusBadge = (status?: string) => {
     switch (status) {
       case 'APPROVED':
@@ -59,7 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                IFIA <span className="text-xs px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800 font-mono">v1.0-PROD</span>
+                IFIA <span className="text-xs px-2 py-0.5 rounded bg-sky-950 text-sky-400 border border-sky-800 font-mono">v1.0-HARDENED</span>
               </h1>
               <span className="hidden sm:inline-block text-xs text-slate-500">|</span>
               <span className="hidden sm:inline-block text-xs font-medium text-slate-300">
@@ -74,8 +131,26 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Case Selector & Status */}
+        {/* Certified Principal Identity & Controls */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Demo personas are never exposed as login choices in production. */}
+          {!publicDemoMode && <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs">
+            <KeyRound size={13} className={currentPersona.isAuthorizedToApprove ? "text-emerald-400" : "text-amber-400"} />
+            <span className="text-slate-400 hidden lg:inline">Caller Principal:</span>
+            <select
+              value={activeUsername}
+              onChange={(e) => onSelectPersona(e.target.value)}
+              className="bg-transparent text-slate-200 font-medium text-xs focus:outline-none cursor-pointer"
+              title="Switch caller persona to test engineering authorization boundaries"
+            >
+              {AVAILABLE_PERSONAS.map(p => (
+                <option key={p.username} value={p.username} className="bg-slate-900 text-slate-200">
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </div>}
+
           {currentCase && getStatusBadge(currentCase.case_status)}
 
           <div className="flex items-center gap-1">
@@ -95,20 +170,28 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Quick Action Buttons */}
           <div className="flex items-center gap-1.5">
             <button
+              onClick={onVerifyAuditTrail}
+              className="px-2 py-1.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/30 text-emerald-300 text-xs font-medium flex items-center gap-1 transition"
+              title="Verify cryptographic SHA-256 audit log integrity"
+            >
+              <UserCheck size={13} /> Verify Audit Trail
+            </button>
+
+            {!publicDemoMode && <button
               onClick={onNewCase}
               className="px-2.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold flex items-center gap-1 transition shadow-sm"
               title="Intake new failure event"
             >
               <PlusCircle size={14} /> Intake Case
-            </button>
+            </button>}
 
-            <button
+            {!publicDemoMode && <button
               onClick={onResetSeed}
               className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition"
               title="Reload synthetic industrial cases"
             >
               <RotateCw size={14} />
-            </button>
+            </button>}
 
             <button
               onClick={onPrintReport}

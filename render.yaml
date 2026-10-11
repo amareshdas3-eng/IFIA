@@ -1,0 +1,31 @@
+# Render Blueprint for a temporary, read-only IFIA demo.
+# This creates one free Docker web service only. It does not modify DNS,
+# Hostinger, WordPress, or the ProEngineering root domain.
+services:
+  - type: web
+    name: ifia-proengineering-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    branch: ifia/source-import-initial
+    autoDeployTrigger: off
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: ALLOWED_ORIGINS
+        fromService:
+          type: web
+          name: ifia-proengineering-demo
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: CMMS_MODE
+        value: SANDBOX
+      - key: REQUIRE_HUMAN_APPROVAL_FOR_CMMS
+        value: "true"
+      - key: ENABLE_PROMPT_INJECTION_SHIELD
+        value: "true"
+      - key: STORAGE_DIR
+        value: /tmp/ifia-data

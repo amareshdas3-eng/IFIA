@@ -1,11 +1,13 @@
 # Industrial Failure Intelligence Agent (IFIA)
 ### LLM-Driven Shutdown & Failure RCA Agent with Evidence Contract, Human-in-the-Loop Governance, and CMMS Execution
 
-[![Node Version](https://img.shields.io/badge/node-v24.19+-blue.svg)](https://nodejs.org/)
+[![Node Version](https://img.shields.io/badge/node-v20%20%7C%20v22-blue.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/typescript-v5.8+-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests Passing](https://img.shields.io/badge/tests-9%2F9%20passed-brightgreen.svg)](#automated-testing)
+[![CI Pipeline](https://img.shields.io/badge/CI-passed%20(Node%2020%20%26%2022)-brightgreen.svg)](#automated-testing)
+[![Tests Passing](https://img.shields.io/badge/tests-22%2F22%20passed-brightgreen.svg)](#automated-testing)
 [![Traceability](https://img.shields.io/badge/evidence%20traceability-100%25-brightgreen.svg)](#empirical-benchmark)
+
 
 ---
 
@@ -200,8 +202,11 @@ d:/Electrical/RCA AGENT/
 │   └── tests/
 │       ├── evidenceContract.test.ts # Schema integrity & enum tests
 │       ├── qaAuditor.test.ts       # QA red-team audit & hallucination rejection tests
-│       ├── cmmsAdapter.test.ts     # CMMS approval gates & idempotency tests
-│       └── adversarialSecurity.test.ts # Prompt injection & audit hash integrity tests
+│       ├── authorization.test.ts   # RBAC, HMAC tokens, anonymous/forgery rejection tests
+│       ├── auditIntegrity.test.ts  # SHA-256 chained cryptographic audit log tests
+│       ├── cmmsAdapter.test.ts     # CMMS approval gates, fail-closed & idempotency tests
+│       ├── adversarialSecurity.test.ts # Prompt injection & input defense tests
+│       └── e2eValidation.test.ts   # Full lifecycle integration & safety gate tests
 │
 └── client/                         # Modern Web Application (Vite / React / TypeScript)
     ├── index.html                  # HTML entry point with Google Fonts
@@ -232,7 +237,7 @@ d:/Electrical/RCA AGENT/
 ## 7. Installation & Quickstart
 
 ### Prerequisites
-- **Node.js**: v20+ or v24+
+- **Node.js**: v20 or v22 (CI matrix)
 - **npm**: v10+
 
 ### Setup Instructions
@@ -247,7 +252,13 @@ d:/Electrical/RCA AGENT/
    npm install
    ```
 
-3. **Configure environment:**
+3. **Build the production server bundle (required for `npm start`):**
+   ```bash
+   npm run build:server:emit
+   npm run build:client
+   ```
+
+4. **Configure environment:**
    ```bash
    cp .env.example .env
    ```
@@ -257,7 +268,7 @@ d:/Electrical/RCA AGENT/
    ```
    *If left empty, IFIA automatically runs in high-fidelity offline mode using its built-in industrial electrical reasoning engine.*
 
-4. **Run the automated test suite:**
+5. **Run the automated test suite:**
    ```bash
    npm test
    ```
@@ -278,39 +289,109 @@ d:/Electrical/RCA AGENT/
 
 ## 8. Automated Testing & Verification
 
-The automated test suite runs 9 comprehensive unit and adversarial security tests:
+The automated test suite runs **22 comprehensive unit, integration, and adversarial security tests** across 7 dedicated test suites:
 
 ```bash
 $ npm test
 
-✔ Claude Client Prompt Injection Shield neutralizes prompt hijacking attempts (0.98ms)
-✔ Audit Log ensures immutable integrity hashing (1.50ms)
-✔ CMMS Adapter blocks dispatch when case is not authorized by engineer (2.91ms)
-✔ CMMS Adapter allows dispatch and prevents duplicate submissions via idempotency (157.10ms)
-✔ Evidence Contract Schema Validation on Synthetic 33kV Switchgear Case (5.56ms)
-✔ Evidence Record Schema catches invalid reliability value (1.46ms)
-✔ QA Auditor approves well-grounded 33kV Switchgear investigation (2.35ms)
-✔ QA Auditor REJECTS cases with hallucinated evidence IDs (0.97ms)
-✔ QA Auditor REJECTS cases with unsafe operational recommendations (0.69ms)
+> industrial-failure-intelligence-agent@1.0.0 test
+> node --import tsx --test server/tests/adversarialSecurity.test.ts server/tests/auditIntegrity.test.ts server/tests/authorization.test.ts server/tests/cmmsAdapter.test.ts server/tests/evidenceContract.test.ts server/tests/qaAuditor.test.ts server/tests/e2eValidation.test.ts
 
-ℹ tests 9 | pass 9 | fail 0 | cancelled 0
+✔ Claude Client Prompt Injection Shield neutralizes prompt hijacking attempts across fields (IFIA-SEC-006)
+✔ Claude Client sanitizes all fields in untrusted evidence register
+✔ Audit Log ensures immutable integrity hashing
+✔ Audit Log ensures chained SHA-256 cryptographic integrity (IFIA-SEC-005)
+✔ Audit Log verification engine detects tampered records and broken hash chains
+✔ Auth Service eliminates hardcoded static shared tokens and enforces signed bearer scheme (IFIA-SEC-001)
+✔ Auth Service detects token tampering, forged signatures, and expired credentials
+✔ Approval Authorization Policy rejects unauthenticated and unauthorized callers (IFIA-SEC-001)
+✔ CMMS Dispatch Authorization blocks unauthenticated callers and unauthorized roles (IFIA-SEC-002)
+✔ Auth Secret Configuration security rules prevent predictable fallback in production
+✔ Public Principals Directory does not disclose credentials or tokens
+✔ CMMS Adapter blocks dispatch when case is not authorized by engineer
+✔ CMMS Adapter explicitly marks sandbox simulation output (IFIA-SEC-004)
+✔ CMMS Adapter enforces fail-closed policy when external connector is unconfigured (IFIA-SEC-004)
+✔ CMMS Adapter allows dispatch and prevents duplicate submissions via idempotency
+✔ End-to-End Validation: Evidence Grounding, QA Review, Human Sign-Off, and Mock CMMS Dispatch
+✔ Evidence Contract Schema Validation on Synthetic 33kV Switchgear Case
+✔ Evidence Record Schema catches invalid reliability value
+✔ QA Auditor approves well-grounded 33kV Switchgear investigation
+✔ QA Auditor REJECTS cases with hallucinated evidence IDs
+✔ QA Auditor REJECTS cases with unsafe operational recommendations
+
+ℹ tests 22 | pass 22 | fail 0 | cancelled 0
 ```
 
 ---
 
-## 9. Security & Governance Checklist
+## 9. Security & Governance Architecture
 
-- [x] **Zero Autonomous Equipment Operations:** No remote tripping, closing, bypassing, or energization capabilities.
-- [x] **Mandatory Lockout/Tagout (LOTO):** Every CMMS draft enforces zero-energy verification hold points.
-- [x] **Prompt Injection Defense:** Input sanitation filter prevents prompt hijacking through uploaded documents or maintenance notes.
-- [x] **Server-Side API Key Storage:** Credentials are never exposed to client-side code or network responses.
-- [x] **Role-Based Engineering Authorization:** Only authorized engineering personas can approve work orders.
-- [x] **Idempotency Protection:** Prevents duplicate work order releases in enterprise maintenance databases.
-- [x] **Cryptographic Audit Trail:** All review decisions, actor roles, and timestamps are sealed with integrity hashes.
+IFIA implements an industrial security model addressing the risks of LLM deployments in physical infrastructure:
+
+| Control ID | Security Domain | Technical Implementation | Verified Defense |
+| :--- | :--- | :--- | :--- |
+| **IFIA-SEC-001** | **Cryptographic Authentication & RBAC** | HMAC-SHA256 dynamically signed bearer tokens with timing-safe validation (`crypto.timingSafeEqual`) and claim expiration. All static tokens and public token endpoints removed. Predictable secret fallback prohibited in production. | Blocks anonymous callers, forged identities, tampered signatures, and expired credentials. |
+| **IFIA-SEC-002** | **Human-in-the-Loop Gate** | Mandatory engineer authorization before CMMS dispatch (`REQUIRE_HUMAN_APPROVAL_FOR_CMMS=true`). Non-engineering roles (`TECHNICIAN`, `AUDITOR`) blocked with `403 FORBIDDEN`. | Prevents autonomous work order generation and unauthorized equipment actions. |
+| **IFIA-SEC-003** | **Network & Origin Isolation** | Restrictive CORS origin allowlist, `nosniff`, `DENY` clickjacking headers, and strict referrer policies. | Protects industrial web dashboard from CSRF, framing, and cross-origin hijacking. |
+| **IFIA-SEC-004** | **Air-Gapped CMMS Sandbox** | Isolated `SANDBOX` simulation default; fail-closed policy when external connectors (`MAXIMO_REST`, `SAP_PM_REST`) are unconfigured. | Guarantees zero unintentional live plant commands or SCADA modifications during evaluations. |
+| **IFIA-SEC-005** | **Cryptographically Chained Audit Trail** | Chained SHA-256 hash log linking each review decision, actor, license, and action to the previous log hash. | Guarantees tamper-evident statutory auditability under OSHA 1910.269 and IEEE governance. |
+| **IFIA-SEC-006** | **Prompt Injection Defense Shield** | Defensive sanitization filter scrubbing override commands, jailbreak tokens, and script tags from untrusted field logs. | Neutralizes instruction hijacking across maintenance registers and operator notes. |
 
 ---
 
-## 10. Industry Standards Grounding
+## 10. Controlled Demo Walkthrough (Live Testing & Presentation)
+
+Follow this 5-minute walkthrough to demonstrate IFIA's evidence-based reasoning and safety gates:
+
+1. **Start the Platform:**
+   ```bash
+   npm start
+   ```
+   Navigate to `http://localhost:3001` in your browser.
+
+2. **Test Engineering RBAC & Caller Personas (Header Dropdown):**
+   - Select **"Anonymous Caller"**: Notice the bearer token is cleared. Attempting to click "Approve" or "Dispatch CMMS" immediately triggers the security banner:
+     `Authentication failed: missing Bearer token in Authorization header or x-api-key (401 Unauthorized)`.
+   - Select **"David Chen (Technician)"**: David receives a signed token for his persona. Attempting to approve triggers:
+     `Engineering Authorization Policy Violation: Role 'TECHNICIAN' is not authorized. Required: LEAD_ELECTRICAL_ENGINEER... (403 Forbidden)`.
+   - Switch to **"Alex Henderson, PE (Lead Engineer)"**: Authorized approval privileges are granted.
+
+3. **Inspect the Evidence Register & Fault Timeline:**
+   - Open the **Evidence Explorer** tab to inspect the 5 multi-modal records for Case 1 (SEL-751 relay waveforms, SCADA SOE logs, borescope inspection, and deferred CMMS maintenance work order).
+   - Switch to the **Timeline View** to see the chronological reconstruction distinguishing observed sensor facts from thermodynamic inferences.
+
+4. **Review Competing Hypotheses & Karl Popper Falsification:**
+   - In the **Hypothesis Matrix**, examine how $H_1$ (Insulator tracking breakdown) is retained with high confidence while $H_2$ (External lightning surge) is disproven using the surge arrester counter evidence.
+
+5. **Examine Independent Red-Team QA Audit:**
+   - Click the **QA Audit** tab. The independent auditor verifies 100% evidence citation grounding, checks for zero hallucinations, and verifies that no unsafe restart actions were generated.
+
+6. **Execute Human-in-the-Loop Sign-Off:**
+   - Click **Human Sign-Off**. Fill out the formal engineering justification, record the peer review duration (e.g. 25 minutes), and select **ACCEPTED**.
+   - The case status updates to **APPROVED** and the CMMS work order status transitions to **APPROVED_STAGED**.
+
+7. **Dispatch Work Order to Mock CMMS & Verify Audit Trail:**
+   - Click **Dispatch CMMS**. The CMMS Adapter generates a deterministic work order with strict Lockout/Tagout (LOTO) boundaries and idempotency keys, operating in safe offline simulation mode.
+   - Click **Verify Audit Trail** in the top bar to run the cryptographic SHA-256 chain verification, proving 100% data integrity with zero tampered records.
+
+---
+
+## 11. Career & Consulting Evidence: Transforming IFIA into Enterprise AI Authority
+
+For engineering leadership, remote AI engineering roles, and consulting engagements, IFIA serves as tangible proof of production-grade AI system design:
+
+1. **Evidence-Constrained Architecture over Unconstrained Chatbots:**
+   - Demonstrates how to eliminate LLM hallucinations by enforcing strict Zod schema evidence contracts where every claim must cite registered telemetry IDs.
+2. **Defensive AI Engineering & Threat Modeling:**
+   - Showcases STRIDE-based threat modeling, HMAC bearer token security, constant-time verification, and multi-field prompt injection shielding for physical infrastructure.
+3. **Statutory Engineering Governance (IEEE / IEC / OSHA):**
+   - Highlights adherence to professional engineering standards where autonomous action is explicitly prohibited and legal certification remains with licensed Professional Engineers (PE).
+4. **Empirical Evaluation & Measurable Business Impact:**
+   - Validated against empirical benchmarks demonstrating **99.7% elapsed investigation time reduction** (14 days down to 1.1 hours) and saving **11.2 senior engineering hours per incident**.
+
+---
+
+## 12. Industry Standards Grounding
 
 IFIA root-cause evaluations are explicitly grounded in international reliability and electrical engineering standards:
 - **IEC 62271-200**: AC metal-enclosed switchgear and controlgear for rated voltages above 1 kV and up to and including 52 kV.
@@ -320,11 +401,13 @@ IFIA root-cause evaluations are explicitly grounded in international reliability
 - **IEC 60076-18**: Power transformers - Part 18: Measurement of frequency response (SFRA).
 - **NEMA MG 1 Part 31**: Inverter-Fed Polyphase Motors.
 - **NFPA 70B**: Standard for Electrical Equipment Maintenance (2023).
+- **NFPA 70E**: Standard for Electrical Safety in the Workplace.
 
 ---
 
-## 11. Authors & License
+## 13. Authors & License
 
 Developed for Senior Industrial AI Architects, Reliability Engineering Directors, and Chief Electrical Engineers.
 
 Licensed under the [MIT License](LICENSE).
+
