@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import { config } from '../config.js';
 import { RCACase, RCACaseSchema } from '../schemas/rcaContract.js';
 
+export const GENESIS_AUDIT_HASH = '0000000000000000000000000000000000000000000000000000000000000000';
+
 export interface AuditLogEntry {
   audit_id: string;
   case_id: string;
@@ -13,7 +15,18 @@ export interface AuditLogEntry {
   action: string;
   details: Record<string, unknown>;
   ip_address?: string;
+  previous_hash: string;
   integrity_hash: string;
+}
+
+export interface AuditVerificationResult {
+  is_valid: boolean;
+  total_records: number;
+  tampered_records_count: number;
+  chain_broken: boolean;
+  tampered_audit_ids: string[];
+  message: string;
+  verified_at: string;
 }
 
 export interface BenchmarkRun {
@@ -31,8 +44,33 @@ export interface BenchmarkRun {
   cmms_draft_valid: boolean;
 }
 
+/**
+ * Computes deterministic SHA-256 cryptographic digest over canonical record representation
+ */
+export function computeAuditEntryHash(
+  previousHash: string,
+  auditId: string,
+  caseId: string,
+  timestamp: string,
+  actor: string,
+  actorRole: string,
+  action: string,
+  details: Record<string, unknown>
+): string {
+  // Sort keys for canonical JSON serialization to guarantee deterministic output
+  const keys = Object.keys(details).sort();
+  const sortedDetails: Record<string, unknown> = {};
+  for (const k of keys) {
+    sortedDetails[k] = details[k];
+  }
+  const canonicalDetails = JSON.stringify(sortedDetails);
+  const payload = `${previousHash}|${auditId}|${caseId}|${timestamp}|${actor}|${actorRole}|${action}|${canonicalDetails}`;
+  return crypto.createHash('sha256').update(payload, 'utf8').digest('hex');
+}
+
 class Store {
   private casesMap: Map<string, RCACase> = new Map();
+  // auditLogs stored in chronological order (oldest at index 0, newest at end)
   private auditLogs: AuditLogEntry[] = [];
   private benchmarkRuns: BenchmarkRun[] = [];
   private initialized = false;
@@ -70,6 +108,26 @@ class Store {
       try {
         const data = fs.readFileSync(this.auditFilePath, 'utf-8');
         this.auditLogs = JSON.parse(data) as AuditLogEntry[];
+        // Migrate legacy audit logs to unbroken chained SHA-256 standards (IFIA-SEC-005)
+        if (this.auditLogs.some(l => !l.previous_hash)) {
+          this.auditLogs.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          let prev = GENESIS_AUDIT_HASH;
+          for (const entry of this.auditLogs) {
+            entry.previous_hash = prev;
+            entry.integrity_hash = computeAuditEntryHash(
+              prev,
+              entry.audit_id,
+              entry.case_id,
+              entry.timestamp,
+              entry.actor,
+              entry.actor_role,
+              entry.action,
+              entry.details
+            );
+            prev = entry.integrity_hash;
+          }
+          this.saveAudit();
+        }
       } catch (err) {
         console.error('Failed to parse existing audit logs:', err);
       }
@@ -115,7 +173,6 @@ class Store {
 
   public saveCase(rcaCase: RCACase): RCACase {
     this.init();
-    // Validate with Zod schema
     const validated = RCACaseSchema.parse(rcaCase);
     this.casesMap.set(validated.case_id, validated);
     this.saveCases();
@@ -131,29 +188,104 @@ class Store {
     return removed;
   }
 
-  public appendAuditLog(entry: Omit<AuditLogEntry, 'audit_id' | 'integrity_hash'>): AuditLogEntry {
+  /**
+   * Appends an immutable, chained cryptographic audit record using SHA-256 (IFIA-SEC-005)
+   */
+  public appendAuditLog(
+    entry: Omit<AuditLogEntry, 'audit_id' | 'integrity_hash' | 'previous_hash'>
+  ): AuditLogEntry {
     this.init();
     const audit_id = `AUD-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-    const payload = `${audit_id}:${entry.case_id}:${entry.timestamp}:${entry.action}:${JSON.stringify(entry.details)}`;
-    const integrity_hash = crypto.createHash('sha256').update(payload).digest('hex');
+
+    // Chain hash to the latest existing entry in chronological log
+    const previous_hash =
+      this.auditLogs.length > 0
+        ? this.auditLogs[this.auditLogs.length - 1].integrity_hash
+        : GENESIS_AUDIT_HASH;
+
+    const integrity_hash = computeAuditEntryHash(
+      previous_hash,
+      audit_id,
+      entry.case_id,
+      entry.timestamp,
+      entry.actor,
+      entry.actor_role,
+      entry.action,
+      entry.details
+    );
 
     const record: AuditLogEntry = {
       audit_id,
       ...entry,
+      previous_hash,
       integrity_hash
     };
 
-    this.auditLogs.unshift(record);
+    this.auditLogs.push(record);
     this.saveAudit();
     return record;
   }
 
   public getAuditLogs(caseId?: string): AuditLogEntry[] {
     this.init();
-    if (caseId) {
-      return this.auditLogs.filter(l => l.case_id === caseId);
+    const records = caseId
+      ? this.auditLogs.filter(l => l.case_id === caseId)
+      : this.auditLogs;
+    // Return newest first for UI display
+    return [...records].reverse();
+  }
+
+  /**
+   * Verifies the cryptographic tamper-evident integrity of the entire audit trail
+   */
+  public verifyAuditLogIntegrity(): AuditVerificationResult {
+    this.init();
+    const tamperedIds: string[] = [];
+    let chainBroken = false;
+
+    for (let i = 0; i < this.auditLogs.length; i++) {
+      const current = this.auditLogs[i];
+      const expectedPrevHash =
+        i === 0 ? GENESIS_AUDIT_HASH : this.auditLogs[i - 1].integrity_hash;
+
+      // 1. Check chain continuity
+      if (current.previous_hash !== expectedPrevHash) {
+        chainBroken = true;
+        tamperedIds.push(current.audit_id);
+      }
+
+      // 2. Recompute cryptographic hash from raw attributes
+      const expectedHash = computeAuditEntryHash(
+        current.previous_hash,
+        current.audit_id,
+        current.case_id,
+        current.timestamp,
+        current.actor,
+        current.actor_role,
+        current.action,
+        current.details
+      );
+
+      if (current.integrity_hash !== expectedHash) {
+        if (!tamperedIds.includes(current.audit_id)) {
+          tamperedIds.push(current.audit_id);
+        }
+      }
     }
-    return this.auditLogs;
+
+    const isValid = tamperedIds.length === 0 && !chainBroken;
+
+    return {
+      is_valid: isValid,
+      total_records: this.auditLogs.length,
+      tampered_records_count: tamperedIds.length,
+      chain_broken: chainBroken,
+      tampered_audit_ids: tamperedIds,
+      message: isValid
+        ? `Audit integrity verified: all ${this.auditLogs.length} records cryptographically validated with unbroken SHA-256 hash chains.`
+        : `Audit integrity violation detected: ${tamperedIds.length} records have tampered payloads or broken hash links.`,
+      verified_at: new Date().toISOString()
+    };
   }
 
   public recordBenchmark(run: BenchmarkRun) {

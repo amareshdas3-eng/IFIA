@@ -44,6 +44,15 @@ export const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isIntakeModalOpen, setIsIntakeModalOpen] = useState<boolean>(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
+  const [activeToken, setActiveToken] = useState<string>('ifia-token-lead-engineer-alex');
+  const [auditVerificationReport, setAuditVerificationReport] = useState<any | null>(null);
+  const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
+
+  const authFetch = (url: string, init?: RequestInit) => {
+    const headers = new Headers(init?.headers || {});
+    headers.set('Authorization', `Bearer ${activeToken}`);
+    return fetch(url, { ...init, headers });
+  };
 
   // Load cases and benchmarks
   const fetchData = async () => {
@@ -84,6 +93,7 @@ export const App: React.FC = () => {
   // Handlers
   const handleSelectCase = (caseId: string) => {
     setCurrentCaseId(caseId);
+    setAuthErrorMessage(null);
   };
 
   const handleResetSeed = async () => {
@@ -97,6 +107,7 @@ export const App: React.FC = () => {
           setCurrentCaseId(data.cases[0].case_id);
         }
         await fetchData();
+        setAuthErrorMessage(null);
       }
     } finally {
       setIsLoading(false);
@@ -104,7 +115,7 @@ export const App: React.FC = () => {
   };
 
   const handleIntakeCase = async (formData: any) => {
-    const res = await fetch('/api/cases', {
+    const res = await authFetch('/api/cases', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData)
@@ -119,38 +130,65 @@ export const App: React.FC = () => {
 
   const handleApproval = async (approvalData: any) => {
     if (!currentCase) return;
-    const res = await fetch(`/api/approvals/${currentCase.case_id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(approvalData)
-    });
-    const data = await res.json();
-    if (data.success && data.case) {
-      setCases((prev) => prev.map((c) => (c.case_id === data.case.case_id ? data.case : c)));
-      setActiveTab('overview');
+    setAuthErrorMessage(null);
+    try {
+      const res = await authFetch(`/api/approvals/${currentCase.case_id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          decision: approvalData.decision,
+          notes: approvalData.notes,
+          review_duration_minutes: approvalData.review_duration_minutes
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.case) {
+        setCases((prev) => prev.map((c) => (c.case_id === data.case.case_id ? data.case : c)));
+        setActiveTab('overview');
+      } else {
+        setAuthErrorMessage(data.message || 'Engineering approval rejected by authorization policy');
+      }
+    } catch (err: any) {
+      setAuthErrorMessage(err.message || 'Network error during approval');
     }
   };
 
   const handleDispatchCMMS = async () => {
     if (!currentCase) return { success: false, message: 'No case selected', status: 'REJECTED' };
-    const res = await fetch(`/api/cmms/dispatch/${currentCase.case_id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_name: currentCase.approvals[0]?.reviewer_name || 'Chief Electrical Engineer',
-        user_role: currentCase.approvals[0]?.reviewer_role || 'LEAD_ELECTRICAL_ENGINEER'
-      })
-    });
-    const data = await res.json();
-    if (data.success) {
-      // Refresh case state
-      const updatedRes = await fetch(`/api/cases/${currentCase.case_id}`);
-      const updatedData = await updatedRes.json();
-      if (updatedData.success) {
-        setCases((prev) => prev.map((c) => (c.case_id === currentCase.case_id ? updatedData.case : c)));
+    setAuthErrorMessage(null);
+    try {
+      const res = await authFetch(`/api/cmms/dispatch/${currentCase.case_id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        const updatedRes = await fetch(`/api/cases/${currentCase.case_id}`);
+        const updatedData = await updatedRes.json();
+        if (updatedData.success) {
+          setCases((prev) => prev.map((c) => (c.case_id === currentCase.case_id ? updatedData.case : c)));
+        }
+      } else {
+        setAuthErrorMessage(data.message || 'CMMS dispatch rejected by authorization policy');
       }
+      return data;
+    } catch (err: any) {
+      const msg = err.message || 'Network error during dispatch';
+      setAuthErrorMessage(msg);
+      return { success: false, message: msg, status: 'REJECTED' };
     }
-    return data;
+  };
+
+  const handleVerifyAuditTrail = async () => {
+    try {
+      const res = await fetch('/api/audit/verify');
+      const data = await res.json();
+      if (data.success) {
+        setAuditVerificationReport(data.report);
+      }
+    } catch (err) {
+      console.error('Failed to verify audit trail:', err);
+    }
   };
 
   const handleRunBenchmarkSuite = async () => {
@@ -188,6 +226,9 @@ export const App: React.FC = () => {
         onNewCase={() => setIsIntakeModalOpen(true)}
         onResetSeed={handleResetSeed}
         onPrintReport={() => setIsPrintModalOpen(true)}
+        activeToken={activeToken}
+        onSelectPersona={setActiveToken}
+        onVerifyAuditTrail={handleVerifyAuditTrail}
       />
 
       {/* Main Tab Navigation */}
@@ -199,6 +240,57 @@ export const App: React.FC = () => {
         unresolvedQA={currentCase?.qa_review?.decision === 'REJECT'}
         isApproved={isApproved}
       />
+
+      {/* Authorization Policy Error Banner */}
+      {authErrorMessage && (
+        <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-4">
+          <div className="bg-rose-950/80 border border-rose-500/50 rounded-xl p-4 flex items-center justify-between text-rose-200 text-xs shadow-lg">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={18} className="text-rose-400 shrink-0" />
+              <div>
+                <strong className="font-semibold text-rose-100">Authorization / Security Policy Alert:</strong>{' '}
+                {authErrorMessage}
+              </div>
+            </div>
+            <button
+              onClick={() => setAuthErrorMessage(null)}
+              className="text-rose-400 hover:text-rose-200 font-bold px-2 py-1 rounded bg-rose-900/40"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Cryptographic Audit Trail Verification Modal / Banner */}
+      {auditVerificationReport && (
+        <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 pt-4">
+          <div className={`border rounded-xl p-4 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs ${
+            auditVerificationReport.is_valid
+              ? 'bg-emerald-950/80 border-emerald-500/50 text-emerald-200'
+              : 'bg-rose-950/80 border-rose-500/50 text-rose-200'
+          }`}>
+            <div className="flex items-center gap-3">
+              <CheckCircle2 size={20} className={auditVerificationReport.is_valid ? "text-emerald-400" : "text-rose-400"} />
+              <div>
+                <strong className="font-bold text-white block">
+                  {auditVerificationReport.is_valid ? 'Cryptographic Audit Trail Verified (SHA-256)' : 'Audit Trail Tampering Detected!'}
+                </strong>
+                <span>{auditVerificationReport.message}</span>
+                <span className="block text-[11px] opacity-75 font-mono mt-0.5">
+                  Records: {auditVerificationReport.total_records} • Hash Chain: {auditVerificationReport.chain_broken ? 'BROKEN' : 'UNBROKEN'} • Timestamp: {auditVerificationReport.verified_at}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setAuditVerificationReport(null)}
+              className="px-3 py-1.5 rounded-lg bg-slate-900/60 hover:bg-slate-900 text-slate-200 font-semibold shrink-0"
+            >
+              Close Report
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Primary Workspace View Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">

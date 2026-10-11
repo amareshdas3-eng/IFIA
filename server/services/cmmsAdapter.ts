@@ -9,6 +9,8 @@ export interface CMMSDispatchResult {
   message: string;
   external_system_id?: string;
   timestamp: string;
+  is_simulation: boolean;
+  simulation_notice?: string;
 }
 
 export class CMMSAdapterService {
@@ -63,9 +65,12 @@ export class CMMSAdapterService {
   ): Promise<CMMSDispatchResult> {
     const timestamp = new Date().toISOString();
 
-    // 1. Authorization & Approval Gate
+    // 1. Mandatory Human-in-the-Loop Governance Gate
     if (config.requireHumanApprovalForCmms) {
-      const isApproved = rcaCase.case_status === 'APPROVED' || rcaCase.approvals.some(a => a.decision === 'ACCEPTED');
+      const isApproved =
+        rcaCase.case_status === 'APPROVED' ||
+        rcaCase.approvals.some(a => a.decision === 'ACCEPTED');
+
       if (!isApproved) {
         db.appendAuditLog({
           case_id: rcaCase.case_id,
@@ -73,22 +78,82 @@ export class CMMSAdapterService {
           actor: userName,
           actor_role: userRole,
           action: 'CMMS_DISPATCH_BLOCKED_UNAPPROVED',
-          details: { reason: 'Case has not been authorized by an approved engineering authority' }
+          details: {
+            reason: 'Case has not been authorized by an approved engineering authority',
+            attempted_by: userName,
+            role: userRole
+          }
         });
 
         return {
           success: false,
           work_order_id: rcaCase.cmms.work_order_id,
           status: 'REJECTED',
-          message: 'Human-in-the-Loop Governance: Work order dispatch rejected. Authorized engineering approval is mandatory before CMMS writes.',
-          timestamp
+          message:
+            'Human-in-the-Loop Governance Policy: Work order dispatch rejected. Authorized engineering approval is mandatory before CMMS writes.',
+          timestamp,
+          is_simulation: config.cmmsMode === 'SANDBOX'
         };
       }
     }
 
-    // 2. Idempotency Check (Duplicate Work Order Prevention)
+    // 2. Fail-Closed Check for External Live Integrations (IFIA-SEC-004)
+    if (config.cmmsMode === 'MAXIMO_REST') {
+      if (!config.maximoEndpoint || config.maximoEndpoint.trim() === '') {
+        db.appendAuditLog({
+          case_id: rcaCase.case_id,
+          timestamp,
+          actor: userName,
+          actor_role: userRole,
+          action: 'CMMS_DISPATCH_BLOCKED_UNCONFIGURED_CONNECTOR',
+          details: {
+            mode: 'MAXIMO_REST',
+            reason: 'IBM Maximo REST endpoint is not configured. Fail-closed policy enforced.'
+          }
+        });
+
+        return {
+          success: false,
+          work_order_id: rcaCase.cmms.work_order_id,
+          status: 'REJECTED',
+          message:
+            'CMMS Fail-Closed Policy: IBM Maximo REST connector endpoint is unconfigured. Dispatch blocked to prevent silent simulation.',
+          timestamp,
+          is_simulation: false
+        };
+      }
+    } else if (config.cmmsMode === 'SAP_PM_REST') {
+      if (!config.sapPmEndpoint || config.sapPmEndpoint.trim() === '') {
+        db.appendAuditLog({
+          case_id: rcaCase.case_id,
+          timestamp,
+          actor: userName,
+          actor_role: userRole,
+          action: 'CMMS_DISPATCH_BLOCKED_UNCONFIGURED_CONNECTOR',
+          details: {
+            mode: 'SAP_PM_REST',
+            reason: 'SAP PM REST endpoint is not configured. Fail-closed policy enforced.'
+          }
+        });
+
+        return {
+          success: false,
+          work_order_id: rcaCase.cmms.work_order_id,
+          status: 'REJECTED',
+          message:
+            'CMMS Fail-Closed Policy: SAP PM REST connector endpoint is unconfigured. Dispatch blocked to prevent silent simulation.',
+          timestamp,
+          is_simulation: false
+        };
+      }
+    }
+
+    // 3. Idempotency Check (Duplicate Work Order Prevention)
     const idempotencyKey = rcaCase.cmms.idempotency_key;
-    if (this.idempotencyRegistry.has(idempotencyKey) || rcaCase.cmms.work_order_status === 'SUBMITTED_TO_CMMS') {
+    if (
+      this.idempotencyRegistry.has(idempotencyKey) ||
+      rcaCase.cmms.work_order_status === 'SUBMITTED_TO_CMMS'
+    ) {
       db.appendAuditLog({
         case_id: rcaCase.case_id,
         timestamp,
@@ -104,11 +169,16 @@ export class CMMSAdapterService {
         status: 'DUPLICATE_IGNORED',
         message: 'Idempotency control active: Work order already submitted and confirmed in CMMS.',
         external_system_id: rcaCase.cmms.cmms_system_reference || 'CMMS-EXISTING-RECORD',
-        timestamp
+        timestamp,
+        is_simulation: config.cmmsMode === 'SANDBOX',
+        simulation_notice:
+          config.cmmsMode === 'SANDBOX'
+            ? 'Safe offline simulation sandbox mode. No live plant systems modified.'
+            : undefined
       };
     }
 
-    // Simulate CMMS network communication latency
+    // Simulate CMMS network communication latency in sandbox
     if (config.cmmsLatencyMs > 0) {
       await new Promise(resolve => setTimeout(resolve, config.cmmsLatencyMs));
     }
@@ -116,7 +186,10 @@ export class CMMSAdapterService {
     // Register idempotency key
     this.idempotencyRegistry.add(idempotencyKey);
 
-    const externalRef = `CMMS-${config.cmmsMode}-${Date.now().toString().slice(-6)}`;
+    const isSimulation = config.cmmsMode === 'SANDBOX';
+    const externalRef = isSimulation
+      ? `CMMS-SIM-${Date.now().toString().slice(-6)}`
+      : `CMMS-${config.cmmsMode}-${Date.now().toString().slice(-6)}`;
 
     // Update case CMMS status
     rcaCase.cmms.work_order_status = 'SUBMITTED_TO_CMMS';
@@ -134,6 +207,7 @@ export class CMMSAdapterService {
       action: 'CMMS_WORK_ORDER_DISPATCHED',
       details: {
         mode: config.cmmsMode,
+        is_simulation: isSimulation,
         work_order_id: rcaCase.cmms.work_order_id,
         external_system_id: externalRef,
         equipment_tag: rcaCase.equipment_tag
@@ -144,9 +218,15 @@ export class CMMSAdapterService {
       success: true,
       work_order_id: rcaCase.cmms.work_order_id,
       status: 'SUBMITTED_TO_CMMS',
-      message: `Successfully created work order in CMMS (${config.cmmsMode}) with reference ID ${externalRef}.`,
+      message: isSimulation
+        ? `Successfully generated work order in CMMS Sandbox Simulation with reference ID ${externalRef}.`
+        : `Successfully created work order in CMMS (${config.cmmsMode}) with reference ID ${externalRef}.`,
       external_system_id: externalRef,
-      timestamp
+      timestamp,
+      is_simulation: isSimulation,
+      simulation_notice: isSimulation
+        ? 'Safe offline simulation sandbox mode. No live plant systems modified.'
+        : undefined
     };
   }
 }

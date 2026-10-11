@@ -11,7 +11,7 @@
     "build:client": "vite build client",
     "build:server": "tsc -p tsconfig.server.json",
     "dev": "concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT\" -c \"cyan.bold,blue.bold\" \"tsx watch server/index.ts\" \"vite client --port 5173\"",
-    "test": "node --import tsx --test server/tests/adversarialSecurity.test.ts server/tests/cmmsAdapter.test.ts server/tests/evidenceContract.test.ts server/tests/qaAuditor.test.ts",
+    "test": "node --import tsx --test server/tests/adversarialSecurity.test.ts server/tests/auditIntegrity.test.ts server/tests/authorization.test.ts server/tests/cmmsAdapter.test.ts server/tests/evidenceContract.test.ts server/tests/qaAuditor.test.ts",
     "benchmark": "tsx server/scripts/runBenchmark.ts"
   },
   "keywords": [

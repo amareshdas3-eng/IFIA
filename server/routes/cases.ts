@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { db } from '../db/database.js';
 import { rcaEngine } from '../services/rcaEngine.js';
 import { syntheticCases } from '../data/syntheticCases.js';
+import { authenticateUser, requireRole } from '../middleware/auth.js';
 
 export const casesRouter = Router();
 
@@ -71,13 +72,32 @@ casesRouter.post('/', async (req: Request, res: Response) => {
   }
 });
 
-// Delete case
-casesRouter.delete('/:id', (req: Request, res: Response) => {
-  const caseId = req.params.id as string;
-  const deleted = db.deleteCase(caseId);
-  if (!deleted) {
-    res.status(404).json({ success: false, message: `Case ${caseId} not found` });
-    return;
+// Delete case (Protected by engineering authorization)
+casesRouter.delete(
+  '/:id',
+  authenticateUser,
+  requireRole(['LEAD_ELECTRICAL_ENGINEER', 'RELIABILITY_DIRECTOR', 'PLANT_OPERATIONS_MANAGER']),
+  (req: Request, res: Response) => {
+    const caseId = req.params.id as string;
+    const deleted = db.deleteCase(caseId);
+    if (!deleted) {
+      res.status(404).json({ success: false, message: `Case ${caseId} not found` });
+      return;
+    }
+
+    const principal = req.user!;
+    db.appendAuditLog({
+      case_id: caseId,
+      timestamp: new Date().toISOString(),
+      actor: principal.name,
+      actor_role: principal.role,
+      action: 'CASE_DELETED',
+      details: {
+        principal_id: principal.id,
+        case_id: caseId
+      }
+    });
+
+    res.json({ success: true, message: `Case ${caseId} deleted by ${principal.name}` });
   }
-  res.json({ success: true, message: `Case ${caseId} deleted` });
-});
+);

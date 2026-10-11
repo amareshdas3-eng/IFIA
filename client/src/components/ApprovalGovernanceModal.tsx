@@ -79,31 +79,16 @@ export const ApprovalGovernanceModal: React.FC<ApprovalGovernanceModalProps> = (
 
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
             {/* Reviewer Name & Role */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-400 font-semibold mb-1">Authorized Reviewer Name & Title</label>
-                <input
-                  type="text"
-                  value={reviewerName}
-                  onChange={(e) => setReviewerName(e.target.value)}
-                  required
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-sky-500 font-medium"
-                />
+            <div className="p-3 bg-slate-900/90 border border-slate-700/80 rounded-xl space-y-1">
+              <div className="flex items-center justify-between text-slate-300">
+                <span className="font-semibold text-slate-200">Authenticated Engineering Principal:</span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-mono">
+                  VERIFIED BEARER TOKEN
+                </span>
               </div>
-
-              <div>
-                <label className="block text-slate-400 font-semibold mb-1">Engineering Role / Authority</label>
-                <select
-                  value={reviewerRole}
-                  onChange={(e) => setReviewerRole(e.target.value as any)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-sky-500"
-                >
-                  <option value="LEAD_ELECTRICAL_ENGINEER">Lead Electrical Engineer (PE / Chartered)</option>
-                  <option value="SENIOR_RELIABILITY_ENGINEER">Senior Reliability Engineer</option>
-                  <option value="PLANT_MAINTENANCE_MANAGER">Plant Maintenance Manager</option>
-                  <option value="CHIEF_ENGINEERING_OFFICER">Chief Engineering Officer</option>
-                </select>
-              </div>
+              <p className="text-[11px] text-slate-400">
+                Reviewer identity and role authority are strictly derived from verified server session claims (IFIA-SEC-001). Client-supplied identity overrides are rejected.
+              </p>
             </div>
 
             {/* Decision Radio Selector */}
