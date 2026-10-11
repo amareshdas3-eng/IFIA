@@ -5,7 +5,7 @@
 [![TypeScript](https://img.shields.io/badge/typescript-v5.8+-blue.svg)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![CI Pipeline](https://img.shields.io/badge/CI-passed%20(Node%2020%20%26%2022)-brightgreen.svg)](#automated-testing)
-[![Tests Passing](https://img.shields.io/badge/tests-21%2F21%20passed-brightgreen.svg)](#automated-testing)
+[![Tests Passing](https://img.shields.io/badge/tests-22%2F22%20passed-brightgreen.svg)](#automated-testing)
 [![Traceability](https://img.shields.io/badge/evidence%20traceability-100%25-brightgreen.svg)](#empirical-benchmark)
 
 
