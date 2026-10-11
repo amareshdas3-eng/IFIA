@@ -157,7 +157,9 @@ const isDirectExecution = Boolean(
     (process.argv[1].endsWith('server/index.ts') ||
       process.argv[1].endsWith('server\\index.ts') ||
       process.argv[1].endsWith('server/index.js') ||
-      process.argv[1].endsWith('server\\index.js'))
+      process.argv[1].endsWith('server\\index.js') ||
+      process.argv[1].endsWith('dist-server/index.js') ||
+      process.argv[1].endsWith('dist-server\\index.js'))
 );
 
 if (isDirectExecution && !isTestMode) {
