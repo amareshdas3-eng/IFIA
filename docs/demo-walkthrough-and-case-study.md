@@ -10,14 +10,14 @@
 
 ### Executive Summary
 
-In high-consequence heavy industrial, petrochemical, and power transmission facilities, catastrophic electrical equipment failures—such as 33 kV switchgear flashovers, 40 MVA transformer DGA gas surges, and large boiler feed pump motor breakdowns—cost upwards of **$100,000 to $500,000 per hour** in unplanned downtime.
+In heavy industrial, petrochemical, and power utility facilities, catastrophic electrical equipment failures—such as 33 kV switchgear flashovers, 40 MVA transformer DGA gas surges, and large boiler feed pump motor breakdowns—frequently cause prolonged operational outages. In the project's modeled petrochemical switchgear incident (`RCA-2026-33KV-001`), the resulting 182-minute downstream cracker outage resulted in an estimated $420,000 production loss.
 
-Traditional Root Cause Analysis (RCA) is a fragmented, 14-day manual exercise bogged down by siloed numerical relay COMTRADE files, conflicting shift logbooks, and unindexed maintenance work orders. 
+Traditional industrial Root Cause Analysis (RCA) is a multi-silo manual exercise where compiling numerical relay COMTRADE disturbance records, SCADA sequence-of-events logs, and deferred maintenance history often takes weeks. For benchmarking, this investigation latency is modeled as a 336-hour (14-day) manual comparison baseline.
 
-The **Industrial Failure Intelligence Agent (IFIA)** transforms this workflow. Rather than using an unconstrained generative chatbot prone to hallucinating sensor readings or standards clauses, IFIA implements a strict **Evidence Contract**:
+The **Industrial Failure Intelligence Agent (IFIA)** reimagines this workflow. Rather than deploying an unconstrained chatbot prone to hallucinating sensor readings or standards clauses, IFIA implements a strict **Evidence Contract**:
 > *"The LLM proposes; evidence constrains; engineering standards guide; statistics qualify; safety policy governs; an authorized human engineer approves."*
 
-This document provides complete **product validation**, a **focused security and negative-path audit**, an **end-to-end demo walkthrough guide**, and **portfolio evidence framing** for engineering leadership and consulting applications.
+This document provides complete **product validation**, a **focused security and negative-path audit**, an **end-to-end demo walkthrough guide**, and **portfolio evidence framing** for engineering leadership and consulting applications. All reported metrics represent measured outcomes within the project's 5-case synthetic validation suite and do not claim universal zero-hallucination or unverified real-world plant fleet performance.
 
 ---
 
@@ -115,7 +115,7 @@ Use this 5-minute walkthrough structure when presenting IFIA to plant managers, 
 
 #### Act 1: The High-Stakes Industrial Challenge (Minute 0:00 – 1:00)
 - **Visual:** Open the live IFIA dashboard at `https://ifia-proengineering-demo.onrender.com`.
-- **Narration:** *"When a 33 kV incomer switchgear trips in an oil refinery, the plant loses $100k+ every single hour. Today, senior electrical engineers spend 14 days sifting through disjointed relay COMTRADE disturbance files, DCS sequences of events, and paper logbooks. Worse, under executive pressure to restore power, plants frequently re-energize before finding the true root cause, triggering repeat catastrophic flashovers."*
+- **Narration:** *"In our modeled petrochemical incident (`RCA-2026-33KV-001`), an uncontained Phase-B busbar flashover caused an estimated $420,000 in downtime. In conventional utility practice, assembling fragmented COMTRADE records, DGA gas chromatography, and shift logs across disparate engineering departments routinely takes up to two weeks (modeled in our benchmark as a 336-hour comparison baseline). Under pressure to restore power, plants frequently re-energize before finding the true root cause, risking repeat catastrophic flashovers."*
 
 #### Act 2: The Evidence Explorer & Fault Timeline (Minute 1:00 – 2:00)
 - **Action:** Select case **`RCA-2026-33KV-001`** and navigate to the **Evidence Explorer** and **Timeline View**.
@@ -146,19 +146,19 @@ To uphold engineering credibility, **target claims are strictly distinguished fr
 
 | Performance Metric | Industrial Manual Baseline | Target Design Goal | Measured Outcome (Synthetic Test Suite) | Validation Status & Reproducibility |
 | :--- | :--- | :--- | :--- | :--- |
-| **Elapsed Investigation Time** | 14 Days (336 hours) | < 3 Hours | **1.1 Hours** (42 min AI + 25 min PE) | **Verified in Sandbox Suite** (`BenchmarkService`) |
-| **Elapsed Time Reduction** | 0% | > 95% | **99.7%** | **Substantiated against 14-day baseline** |
+| **Elapsed Investigation Time** | Project-defined 336 hrs (14 days) | < 3 Hours | **1.1 Hours** (42 min AI + 25 min PE) | **Verified in Sandbox Suite** (`BenchmarkService`) |
+| **Elapsed Time Reduction** | 0% | > 95% | **99.7%** | **Substantiated against defined 336-hr baseline** |
 | **Senior Engineer Labor** | 10.0 – 14.0 Staff-Hours | < 2.0 Staff-Hours | **0.8 Staff-Hours** (Review & Sign-Off) | **Substantiated in Sandbox** |
 | **Evidence Traceability** | Manual / Fragmented | 100% Traceable | **96.2% Verified Citations** | **Audited by `qaAuditor.ts`** |
-| **Hallucination Rate** | Subjective human bias | 0% Hallucinations | **0.0%** (0 fabricated citations detected) | **Enforced via Zod & Prompt 6 AST check** |
+| **Fabricated Citations (Test Suite)** | Subjective human bias | 0 Fabrications | **0 Fabricated Citations Detected** | **Enforced via Zod & Prompt 6 AST check** |
 | **Safety Interlock Violations** | Occasional plant oversight | 0 Violations | **0 Violations** (Mandatory LOTO hold points) | **Enforced by Schema & CMMS Adapter** |
 
 #### Test Methodology & Measurement Protocol
 1. **Sample Size & Scope:** The validation dataset consists of **5 complex industrial failure cases** (`RCA-2026-33KV-001` through `RCA-2026-CBL-11KV-05`), comprising 26 ingested multi-modal evidence records, 9 competing physical hypotheses, and 5 complete fault trees.
-2. **Baseline Definition:** The 14-day manual baseline reflects standard turnaround intervals across heavy petrochemical and transmission utility incidents (data collation across SCADA, protection relays, DGA labs, and vendor reports).
+2. **Baseline Definition:** The project-defined 336-hour (14-day) manual comparison baseline models multi-department data gathering across protection relays, DCS event logs, DGA labs, and vendor reports.
 3. **Execution Harness:** Benchmarks are recorded deterministically via `BenchmarkService.runCaseBenchmark()`, combining automated parsing time with recorded PE review durations.
 4. **Reproducibility:** Run `npm test` locally to execute the 23-test suite, or query `GET /api/benchmark/summary` on the demo backend.
-5. **Future Plant Cohort Roadmap:** For live operational deployment, a 12-month prospective cohort study across 20+ real plant incidents is recommended to compare IFIA against historical manual RCAs on MTTR (Mean Time to Repair) and recurrences.
+5. **Future Plant Cohort Roadmap:** The project explicitly cautions that synthetic benchmark outcomes do not prove equivalent results across live operating fleets. A 12-month prospective cohort study across 20+ real plant incidents is proposed to evaluate live operational MTTR and recurrence reductions.
 
 ---
 
@@ -171,19 +171,19 @@ To uphold engineering credibility, **target claims are strictly distinguished fr
 - **WordPress Staging Strategy:** The demo is frozen and verified on Render. When ready to add to the ProEngineering portfolio, add a clean project case card linking directly to the live demo and this case study without modifying production DNS or core hosting infrastructure.
 
 #### Quantified Impact Metrics for Resumes & CVs
-- *Architected and deployed IFIA, an industrial AI platform automating Root Cause Analysis (RCA) for critical high-voltage assets (33 kV switchgear, 40 MVA transformers, 145 kV GIS), compressing incident turnaround from 14 days to 1.1 hours in synthetic benchmark testing.*
-- *Implemented an Evidence Contract framework using Karl Popper falsification, enforcing 96.2% raw-evidence traceability and eliminating LLM hallucinations via automated Prompt 6 adversarial auditing.*
+- *Architected and deployed IFIA, an industrial AI platform automating Root Cause Analysis (RCA) for critical high-voltage assets (33 kV switchgear, 40 MVA transformers, 145 kV GIS), demonstrating 1.1 hours investigation turnaround against a project-defined 336-hour comparison baseline in synthetic benchmark trials.*
+- *Implemented an Evidence Contract framework using Karl Popper falsification, enforcing 96.2% raw-evidence traceability and detecting 0 fabricated citations in the test suite via automated Prompt 6 adversarial auditing.*
 - *Engineered human-in-the-loop safety governance requiring licensed Professional Engineer sign-offs, chained SHA-256 cryptographic audit ledgers, and air-gapped CMMS work order generation with mandatory NFPA 70B Lockout/Tagout (LOTO) hold points.*
 - *Containerized full-stack application to Render with automated CI/CD across Node.js 20 & 22, passing 23 security, RBAC, and contract validation tests.*
 
 #### LinkedIn & Executive Summary Announcement Snippet
 > ⚡ **Industrial Electrical Failure Intelligence Agent (IFIA)**  
 > 
-> Investigating high-voltage equipment failures in petrochemical and utility plants typically takes 14 days of piecing together COMTRADE relay logs, DGA oil tests, and shift records.
+> Investigating high-voltage equipment failures in petrochemical and utility plants typically involves multi-week delays compiling COMTRADE relay logs, DGA oil tests, and shift records.
 > 
-> I built **IFIA** to compress this process to under 2 hours without sacrificing engineering rigor. Unlike open-ended conversational chatbots, IFIA is built on an **Evidence Contract**:
+> I built **IFIA** to compress this process to under 2 hours in synthetic validation without sacrificing engineering rigor. Unlike open-ended conversational chatbots, IFIA is built on an **Evidence Contract**:
 > - 🔍 **Popperian Falsification:** Competing physical failure hypotheses evaluated side-by-side.
-> - 🛡️ **Zero Hallucination Red-Team QA:** Automated Prompt 6 adversarial auditing checks every claim against raw evidence IDs (`EV-xxx`).
+> - 🛡️ **Zero Fabricated Citations in Test Suite:** Automated Prompt 6 adversarial auditing checks every claim against raw evidence IDs (`EV-xxx`).
 > - 🔒 **Human-in-the-Loop PE Governance:** Mandatory engineering license sign-off with cryptographically chained SHA-256 audit records.
 > - ⚡ **Safe CMMS Work Orders:** Air-gapped sandbox generation with mandatory Lockout/Tagout (LOTO) hold points.
 > 

@@ -76,12 +76,12 @@ The benchmark data is documented with scientific rigor to distinguish between ta
 
 - **Validation Scope:** 5 complex multi-modal industrial failure cases across high-consequence asset classes (33 kV AIS Switchgear, 132/33 kV 40 MVA Transformer, 6.6 kV 1200 kW BFP Motor, 145 kV SF6 GIS Bay, 11 kV XLPE Cable Termination).
 - **Evidence Scale:** 26 multi-modal records (COMTRADE, DGA, SCADA SOE, borescope, maintenance logs), 9 competing physical hypotheses, 5 fault trees.
-- **Baseline Definition:** 14-day manual baseline reflects standard turnaround intervals across heavy petrochemical and transmission utility incidents.
+- **Baseline Definition:** The project-defined 336-hour (14-day) manual comparison baseline models multi-department data gathering across protection relays, DCS event logs, DGA labs, and vendor reports.
 - **Measured Outcomes:**
-  - Elapsed turnaround: **1.1 hours** (42 min AI + 25 min PE review) vs 336-hour manual baseline (**99.7% reduction**).
+  - Elapsed turnaround: **1.1 hours** (42 min AI + 25 min PE review) vs project-defined 336-hour comparison baseline (**99.7% reduction**).
   - Senior engineer labor: **0.8 staff-hours** per incident vs 12.0 hours manual.
   - Evidence citation traceability: **96.2%** of material claims cite verified `EV-xxx` records.
-  - Test suite hallucination rate: **0.0%** (0 fabricated citations detected in test suite).
+  - Test suite fabricated citations: **0** (0 fabricated citations detected in test suite; open-domain hallucination risk remains non-zero without human review).
   - Safety policy violations: **0** (mandatory zero-actuation sandbox rule and NFPA 70B LOTO hold points enforced).
 
 ---
