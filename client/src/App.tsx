@@ -44,14 +44,44 @@ export const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isIntakeModalOpen, setIsIntakeModalOpen] = useState<boolean>(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
-  const [activeToken, setActiveToken] = useState<string>('ifia-token-lead-engineer-alex');
+  const [activeUsername, setActiveUsername] = useState<string>('alex.henderson');
+  const [activeToken, setActiveToken] = useState<string>('');
   const [auditVerificationReport, setAuditVerificationReport] = useState<any | null>(null);
   const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
 
   const authFetch = (url: string, init?: RequestInit) => {
     const headers = new Headers(init?.headers || {});
-    headers.set('Authorization', `Bearer ${activeToken}`);
+    if (activeToken) {
+      headers.set('Authorization', `Bearer ${activeToken}`);
+    }
     return fetch(url, { ...init, headers });
+  };
+
+  const obtainTokenForPersona = async (username: string) => {
+    setActiveUsername(username);
+    setAuthErrorMessage(null);
+    if (username === 'anonymous') {
+      setActiveToken('');
+      return;
+    }
+    try {
+      const res = await fetch('/api/auth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+      const data = await res.json();
+      if (data.success && data.token) {
+        setActiveToken(data.token);
+      } else {
+        setActiveToken('');
+        setAuthErrorMessage(data.message || 'Failed to authenticate principal');
+      }
+    } catch (err: any) {
+      console.error('Failed to obtain token for principal:', err);
+      setActiveToken('');
+      setAuthErrorMessage(err.message || 'Authentication service unreachable');
+    }
   };
 
   // Load cases and benchmarks
@@ -86,6 +116,7 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     fetchData();
+    obtainTokenForPersona('alex.henderson');
   }, []);
 
   const currentCase = cases.find((c) => c.case_id === currentCaseId) || cases[0] || null;
@@ -226,8 +257,8 @@ export const App: React.FC = () => {
         onNewCase={() => setIsIntakeModalOpen(true)}
         onResetSeed={handleResetSeed}
         onPrintReport={() => setIsPrintModalOpen(true)}
-        activeToken={activeToken}
-        onSelectPersona={setActiveToken}
+        activeUsername={activeUsername}
+        onSelectPersona={obtainTokenForPersona}
         onVerifyAuditTrail={handleVerifyAuditTrail}
       />
 

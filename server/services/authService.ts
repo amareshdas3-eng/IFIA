@@ -64,88 +64,163 @@ export const CERTIFIED_PRINCIPALS: Record<string, AuthenticatedUser> = {
   }
 };
 
-// Well-known developer and integration tokens mapped directly to verified principals
-const STATIC_TOKEN_MAP: Record<string, string> = {
-  'ifia-token-lead-engineer-alex': 'alex.henderson',
-  'ifia-token-reliability-director-jane': 'jane.smith',
-  'ifia-token-maint-supervisor-marcus': 'marcus.vance',
-  'ifia-token-technician-david': 'david.chen',
-  'ifia-token-auditor-sarah': 'sarah.lin'
-};
+// Certified Engineering Principals Directory
+export const VALID_USER_ROLES: readonly UserRole[] = [
+  'LEAD_ELECTRICAL_ENGINEER',
+  'RELIABILITY_DIRECTOR',
+  'PLANT_OPERATIONS_MANAGER',
+  'MAINTENANCE_SUPERVISOR',
+  'RELIABILITY_ENGINEER',
+  'TECHNICIAN',
+  'AUDITOR',
+  'VIEWER'
+] as const;
+
+export interface TokenClaims extends AuthenticatedUser {
+  issuedAt: number;
+  expiresAt: number;
+}
 
 export class AuthService {
   private secret: string;
+  private readonly defaultTtlMs: number = 24 * 60 * 60 * 1000; // 24-hour token validity
 
   constructor() {
-    this.secret = config.authSecret || 'ifia-secure-industrial-airgap-auth-secret-key-2026';
+    this.secret = config.authSecret;
   }
 
   /**
-   * Signs a secure tamper-proof bearer token with HMAC-SHA256
+   * Signs a secure tamper-proof bearer token with HMAC-SHA256 and expiration claims
    */
-  public generateSignedToken(user: AuthenticatedUser): string {
-    const payload = Buffer.from(
-      JSON.stringify({
-        ...user,
-        issuedAt: Date.now()
-      })
-    ).toString('base64url');
+  public generateSignedToken(user: AuthenticatedUser, expiresInMs?: number): string {
+    const now = Date.now();
+    const expiresAt = typeof expiresInMs === 'number' ? now + expiresInMs : now + this.defaultTtlMs;
+
+    const payloadObj: TokenClaims = {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      role: user.role,
+      department: user.department,
+      licenseNumber: user.licenseNumber,
+      issuedAt: typeof user.issuedAt === 'number' ? user.issuedAt : now,
+      expiresAt
+    };
+
+    const payloadB64 = Buffer.from(JSON.stringify(payloadObj)).toString('base64url');
 
     const signature = crypto
       .createHmac('sha256', this.secret)
-      .update(payload)
+      .update(payloadB64)
       .digest('base64url');
 
-    return `ifia_${payload}.${signature}`;
+    return `ifia_${payloadB64}.${signature}`;
   }
 
   /**
-   * Verifies and decodes an incoming bearer token or pre-configured principal token
+   * Issues a cryptographically signed HMAC token for a registered certified principal
+   */
+  public issueTokenForPrincipal(username: string, expiresInMs?: number): string | null {
+    const principal = CERTIFIED_PRINCIPALS[username];
+    if (!principal) return null;
+    return this.generateSignedToken(principal, expiresInMs);
+  }
+
+  /**
+   * Verifies and decodes an incoming bearer token strictly against HMAC-SHA256 signature,
+   * expiration window, and certified principal claim constraints.
+   * All hardcoded/shared tokens are rejected.
    */
   public verifyAuthToken(rawToken: string): AuthenticatedUser | null {
     if (!rawToken || typeof rawToken !== 'string') return null;
 
     const token = rawToken.trim();
 
-    // Check pre-configured principal tokens
-    if (STATIC_TOKEN_MAP[token]) {
-      const username = STATIC_TOKEN_MAP[token];
-      return CERTIFIED_PRINCIPALS[username] || null;
+    // Enforce strict signed token scheme prefix
+    if (!token.startsWith('ifia_')) {
+      return null;
     }
 
-    // Check HMAC-signed bearer tokens
-    if (token.startsWith('ifia_')) {
-      const parts = token.slice(5).split('.');
-      if (parts.length !== 2) return null;
+    const parts = token.slice(5).split('.');
+    if (parts.length !== 2) return null;
 
-      const [payloadB64, signature] = parts;
-      const expectedSignature = crypto
-        .createHmac('sha256', this.secret)
-        .update(payloadB64)
-        .digest('base64url');
+    const [payloadB64, signature] = parts;
+    if (!payloadB64 || !signature) return null;
 
-      if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
+    const expectedSignature = crypto
+      .createHmac('sha256', this.secret)
+      .update(payloadB64)
+      .digest('base64url');
+
+    const sigBuf = Buffer.from(signature, 'utf-8');
+    const expectedBuf = Buffer.from(expectedSignature, 'utf-8');
+
+    // Constant-time comparison to prevent timing side-channel attacks
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+      return null;
+    }
+
+    try {
+      const decoded = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf-8')) as TokenClaims;
+
+      // 1. Validate mandatory fields
+      if (!decoded.id || !decoded.username || !decoded.name || !decoded.role || !decoded.department) {
         return null;
       }
 
-      try {
-        const decoded = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf-8')) as AuthenticatedUser;
-        return decoded;
-      } catch {
+      // 2. Validate role is within recognized Engineering User Roles
+      if (!VALID_USER_ROLES.includes(decoded.role)) {
         return null;
       }
+
+      const now = Date.now();
+
+      // 3. Reject future tokens (clock-skew tolerance: 60s)
+      if (typeof decoded.issuedAt !== 'number' || decoded.issuedAt > now + 60000) {
+        return null;
+      }
+
+      // 4. Reject expired tokens
+      if (typeof decoded.expiresAt !== 'number' || decoded.expiresAt < now) {
+        return null;
+      }
+
+      // 5. Verify against Certified Principals directory to prevent forged claim payloads
+      const verifiedPrincipal = CERTIFIED_PRINCIPALS[decoded.username];
+      if (verifiedPrincipal) {
+        if (verifiedPrincipal.id !== decoded.id || verifiedPrincipal.role !== decoded.role) {
+          return null; // Claim tampering detected
+        }
+      }
+
+      return {
+        id: decoded.id,
+        username: decoded.username,
+        name: decoded.name,
+        role: decoded.role,
+        licenseNumber: decoded.licenseNumber,
+        department: decoded.department,
+        issuedAt: decoded.issuedAt
+      };
+    } catch {
+      return null;
     }
-
-    return null;
   }
 
-  public getCertifiedPrincipals(): AuthenticatedUser[] {
-    return Object.values(CERTIFIED_PRINCIPALS);
-  }
-
-  public getDefaultEngineerToken(): string {
-    return 'ifia-token-lead-engineer-alex';
+  /**
+   * Returns certified principals directory without disclosing credentials or tokens
+   */
+  public getPublicPrincipalsDirectory(): Array<Omit<AuthenticatedUser, 'issuedAt'>> {
+    return Object.values(CERTIFIED_PRINCIPALS).map(p => ({
+      id: p.id,
+      username: p.username,
+      name: p.name,
+      role: p.role,
+      licenseNumber: p.licenseNumber,
+      department: p.department
+    }));
   }
 }
 
 export const authService = new AuthService();
+

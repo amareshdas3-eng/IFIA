@@ -55,14 +55,36 @@ if (db.getCases().length === 0) {
   console.log('Seeded initial synthetic industrial electrical cases.');
 }
 
-// Certified Engineering Principals Directory & Auth Info
-app.get('/api/auth/principals', (_req, res) => {
+// Issue Cryptographically Signed Engineering Bearer Token
+app.post('/api/auth/token', (req, res) => {
+  const { username } = req.body || {};
+  if (!username || typeof username !== 'string') {
+    res.status(400).json({
+      success: false,
+      code: 'AUTH_INVALID_REQUEST',
+      message: 'Username is required to issue signed credentials'
+    });
+    return;
+  }
+
+  const token = authService.issueTokenForPrincipal(username.trim());
+  if (!token) {
+    res.status(404).json({
+      success: false,
+      code: 'AUTH_USER_NOT_FOUND',
+      message: `Unregistered or unauthorized engineering principal: '${username}'`
+    });
+    return;
+  }
+
+  const principal = CERTIFIED_PRINCIPALS[username.trim()];
   res.json({
     success: true,
-    principals: authService.getCertifiedPrincipals(),
-    default_token: authService.getDefaultEngineerToken()
+    token,
+    user: principal
   });
 });
+
 
 app.get('/api/auth/me', optionalAuthenticateUser, (req, res) => {
   if (req.user) {

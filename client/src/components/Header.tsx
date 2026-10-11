@@ -3,7 +3,7 @@ import { RCACase } from '../types';
 import { ShieldCheck, AlertTriangle, CheckCircle2, RotateCw, PlusCircle, Printer, Cpu, UserCheck, KeyRound } from 'lucide-react';
 
 export interface EngineerPersona {
-  token: string;
+  username: string;
   name: string;
   role: string;
   label: string;
@@ -12,31 +12,38 @@ export interface EngineerPersona {
 
 export const AVAILABLE_PERSONAS: EngineerPersona[] = [
   {
-    token: 'ifia-token-lead-engineer-alex',
+    username: 'alex.henderson',
     name: 'Alex Henderson, PE',
     role: 'LEAD_ELECTRICAL_ENGINEER',
     label: 'Alex Henderson, PE (Lead Engineer — Authorized)',
     isAuthorizedToApprove: true
   },
   {
-    token: 'ifia-token-reliability-director-jane',
+    username: 'jane.smith',
     name: 'Dr. Jane Smith, PE',
     role: 'RELIABILITY_DIRECTOR',
     label: 'Dr. Jane Smith, PE (Director — Authorized)',
     isAuthorizedToApprove: true
   },
   {
-    token: 'ifia-token-maint-supervisor-marcus',
+    username: 'marcus.vance',
     name: 'Marcus Vance, CMRP',
     role: 'MAINTENANCE_SUPERVISOR',
     label: 'Marcus Vance (Supervisor — Dispatch Only)',
     isAuthorizedToApprove: false
   },
   {
-    token: 'ifia-token-technician-david',
+    username: 'david.chen',
     name: 'David Chen, NETA',
     role: 'TECHNICIAN',
     label: 'David Chen (Technician — Read Only)',
+    isAuthorizedToApprove: false
+  },
+  {
+    username: 'anonymous',
+    name: 'Anonymous Caller',
+    role: 'ANONYMOUS',
+    label: 'Anonymous Caller (Unauthenticated — Blocked)',
     isAuthorizedToApprove: false
   }
 ];
@@ -48,8 +55,8 @@ interface HeaderProps {
   onNewCase: () => void;
   onResetSeed: () => void;
   onPrintReport: () => void;
-  activeToken: string;
-  onSelectPersona: (token: string) => void;
+  activeUsername: string;
+  onSelectPersona: (username: string) => void;
   onVerifyAuditTrail: () => void;
 }
 
@@ -60,11 +67,12 @@ export const Header: React.FC<HeaderProps> = ({
   onNewCase,
   onResetSeed,
   onPrintReport,
-  activeToken,
+  activeUsername,
   onSelectPersona,
   onVerifyAuditTrail
 }) => {
-  const currentPersona = AVAILABLE_PERSONAS.find(p => p.token === activeToken) || AVAILABLE_PERSONAS[0];
+  const currentPersona = AVAILABLE_PERSONAS.find(p => p.username === activeUsername) || AVAILABLE_PERSONAS[0];
+
 
   const getStatusBadge = (status?: string) => {
     switch (status) {
@@ -128,13 +136,13 @@ export const Header: React.FC<HeaderProps> = ({
             <KeyRound size={13} className={currentPersona.isAuthorizedToApprove ? "text-emerald-400" : "text-amber-400"} />
             <span className="text-slate-400 hidden lg:inline">Caller Principal:</span>
             <select
-              value={activeToken}
+              value={activeUsername}
               onChange={(e) => onSelectPersona(e.target.value)}
               className="bg-transparent text-slate-200 font-medium text-xs focus:outline-none cursor-pointer"
               title="Switch caller persona to test engineering authorization boundaries"
             >
               {AVAILABLE_PERSONAS.map(p => (
-                <option key={p.token} value={p.token} className="bg-slate-900 text-slate-200">
+                <option key={p.username} value={p.username} className="bg-slate-900 text-slate-200">
                   {p.label}
                 </option>
               ))}

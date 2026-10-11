@@ -2,23 +2,30 @@ name: IFIA CI & Security Verification
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, 'ifia/**', 'release/**' ]
   pull_request:
     branches: [ main, master ]
 
 jobs:
   verify:
-    name: Build, Test & Security Verification
+    name: Build, Test & Security Verification (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20, 22]
+
+    env:
+      AUTH_SECRET: 'ci-testing-256-bit-cryptographic-security-token-key-2026'
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Set up Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
       - name: Install dependencies
@@ -35,3 +42,4 @@ jobs:
 
       - name: Run Empirical Reliability Benchmark Harness
         run: npm run benchmark
+
