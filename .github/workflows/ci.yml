@@ -32,6 +32,9 @@ jobs:
       - name: Typecheck & Build Server
         run: npm run build:server
 
+      - name: Compile Production Server
+        run: npm run build:server:emit
+
       - name: Build Client Dashboard
         run: npm run build:client
 
