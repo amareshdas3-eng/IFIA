@@ -237,7 +237,7 @@ d:/Electrical/RCA AGENT/
 ## 7. Installation & Quickstart
 
 ### Prerequisites
-- **Node.js**: v20+ or v24+
+- **Node.js**: v20 or v22 (CI matrix)
 - **npm**: v10+
 
 ### Setup Instructions
@@ -283,7 +283,7 @@ d:/Electrical/RCA AGENT/
 
 ## 8. Automated Testing & Verification
 
-The automated test suite runs **21 comprehensive unit, integration, and adversarial security tests** across 7 dedicated test suites:
+The automated test suite runs **22 comprehensive unit, integration, and adversarial security tests** across 7 dedicated test suites:
 
 ```bash
 $ npm test
@@ -313,7 +313,7 @@ $ npm test
 ✔ QA Auditor REJECTS cases with hallucinated evidence IDs
 ✔ QA Auditor REJECTS cases with unsafe operational recommendations
 
-ℹ tests 21 | pass 21 | fail 0 | cancelled 0
+ℹ tests 22 | pass 22 | fail 0 | cancelled 0
 ```
 
 ---
