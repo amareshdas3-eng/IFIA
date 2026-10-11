@@ -252,7 +252,13 @@ d:/Electrical/RCA AGENT/
    npm install
    ```
 
-3. **Configure environment:**
+3. **Build the production server bundle (required for `npm start`):**
+   ```bash
+   npm run build:server:emit
+   npm run build:client
+   ```
+
+4. **Configure environment:**
    ```bash
    cp .env.example .env
    ```
