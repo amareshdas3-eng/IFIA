@@ -17,7 +17,10 @@ services:
       - key: AUTH_SECRET
         generateValue: true
       - key: ALLOWED_ORIGINS
-        sync: false
+        fromService:
+          type: web
+          name: ifia-proengineering-demo
+          envVarKey: RENDER_EXTERNAL_URL
       - key: CMMS_MODE
         value: SANDBOX
       - key: REQUIRE_HUMAN_APPROVAL_FOR_CMMS

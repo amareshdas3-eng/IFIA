@@ -58,7 +58,7 @@ Use this path only when Hostinger does not offer a Node.js app. The repository i
 1. Open the Render dashboard and choose **New → Blueprint** (or use Render's Blueprint creation flow).
 2. Connect `amareshdas3-eng/IFIA`, select branch `ifia/source-import-initial`, and review the Blueprint from `render.yaml`.
 3. Confirm the service is named `ifia-proengineering-demo` and the plan is **Free**. The Blueprint creates only one web service; it does not add a database, change DNS, or modify Hostinger/WordPress.
-4. When prompted for `ALLOWED_ORIGINS`, enter the exact HTTPS origin Render assigns to this service (for example, `https://ifia-proengineering-demo.onrender.com` only if that is the actual URL shown in your dashboard). Do not include a trailing slash or guess the final hostname.
+4. `ALLOWED_ORIGINS` is automatically derived from the service's assigned `RENDER_EXTERNAL_URL` via Render's `fromService` directive. The application trims any trailing slashes automatically to guarantee valid CORS origin header matching.
 5. Let Render generate `AUTH_SECRET`. Do not add an Anthropic API key or real industrial credentials for this initial demo.
 6. Review the cost/plan screen carefully. If the dashboard requires a paid plan, payment method, or upgrade to proceed, stop and do not approve it.
 7. Deploy, then open the assigned HTTPS URL and check `/api/health`. Verify the UI and confirm `POST /api/auth/token` returns `DEMO_TOKEN_ISSUANCE_DISABLED` in production.

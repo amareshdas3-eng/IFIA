@@ -50,6 +50,37 @@ export function validateAuthSecretConfig(secret?: string, nodeEnv?: string): str
   return ephemeral;
 }
 
+export function resolveAllowedOrigins(allowedOriginsEnv?: string, renderExternalUrl?: string): string[] {
+  const defaults = [
+    'http://localhost:5173',
+    'http://localhost:3001',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3001'
+  ];
+  const origins = new Set<string>();
+
+  const rawEntries: string[] = [];
+  if (allowedOriginsEnv) {
+    rawEntries.push(...allowedOriginsEnv.split(','));
+  } else {
+    rawEntries.push(...defaults);
+  }
+
+  if (renderExternalUrl) {
+    rawEntries.push(renderExternalUrl);
+  }
+
+  for (const raw of rawEntries) {
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    // Strip trailing slash for exact standard CORS origin comparison
+    const normalized = trimmed.endsWith('/') ? trimmed.replace(/\/+$/, '') : trimmed;
+    origins.add(normalized);
+  }
+
+  return Array.from(origins);
+}
+
 export const config = {
   port: parseInt(process.env.PORT || '3001', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -61,7 +92,7 @@ export const config = {
   requireHumanApprovalForCmms: process.env.REQUIRE_HUMAN_APPROVAL_FOR_CMMS !== 'false',
   enablePromptInjectionShield: process.env.ENABLE_PROMPT_INJECTION_SHIELD !== 'false',
   authSecret: validateAuthSecretConfig(process.env.AUTH_SECRET, process.env.NODE_ENV),
-  allowedOrigins: (process.env.ALLOWED_ORIGINS || 'http://localhost:5173,http://localhost:3001,http://127.0.0.1:5173,http://127.0.0.1:3001').split(','),
+  allowedOrigins: resolveAllowedOrigins(process.env.ALLOWED_ORIGINS, process.env.RENDER_EXTERNAL_URL),
   maximoEndpoint: process.env.MAXIMO_REST_ENDPOINT || '',
   sapPmEndpoint: process.env.SAP_PM_REST_ENDPOINT || ''
 };

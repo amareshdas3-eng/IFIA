@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { db } from '../db/database.js';
 import { authService, CERTIFIED_PRINCIPALS } from '../services/authService.js';
 import { authenticateUser, requireRole } from '../middleware/auth.js';
-import { validateAuthSecretConfig } from '../config.js';
+import { validateAuthSecretConfig, resolveAllowedOrigins } from '../config.js';
 import { syntheticCases } from '../data/syntheticCases.js';
 import { RCACase } from '../schemas/rcaContract.js';
 
@@ -363,5 +363,31 @@ test('Principal-claim validation closes directory gap: rejects unknown usernames
   assert.strictEqual(verified?.department, validPrincipal.department);
   assert.strictEqual(verified?.licenseNumber, validPrincipal.licenseNumber);
 });
+
+test('resolveAllowedOrigins safely incorporates RENDER_EXTERNAL_URL and strips trailing slashes', () => {
+  // 1. Default fallback when neither env var is passed
+  const defaults = resolveAllowedOrigins();
+  assert.ok(defaults.includes('http://localhost:3001'));
+  assert.ok(defaults.includes('http://localhost:5173'));
+
+  // 2. Comma-separated list with trailing slash normalization
+  const custom = resolveAllowedOrigins('https://ifia.proengineering.in/, https://preview.example.com/');
+  assert.deepStrictEqual(custom, ['https://ifia.proengineering.in', 'https://preview.example.com']);
+
+  // 3. Render dynamic RENDER_EXTERNAL_URL derived origin with trailing slash
+  const renderDerived = resolveAllowedOrigins(undefined, 'https://ifia-proengineering-demo.onrender.com/');
+  assert.ok(renderDerived.includes('https://ifia-proengineering-demo.onrender.com'));
+  assert.strictEqual(
+    renderDerived.some(o => o.endsWith('/')),
+    false,
+    'No origin should contain trailing slash'
+  );
+
+  // 4. Combined custom origin and RENDER_EXTERNAL_URL
+  const combined = resolveAllowedOrigins('https://custom.app', 'https://ifia-proengineering-demo.onrender.com');
+  assert.ok(combined.includes('https://custom.app'));
+  assert.ok(combined.includes('https://ifia-proengineering-demo.onrender.com'));
+});
+
 
 
