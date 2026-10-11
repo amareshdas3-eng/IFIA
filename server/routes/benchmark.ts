@@ -15,6 +15,10 @@ benchmarkRouter.get('/runs', (_req: Request, res: Response) => {
 });
 
 benchmarkRouter.post('/run/:caseId', (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(403).json({ success: false, code: 'PUBLIC_DEMO_READ_ONLY', message: 'Benchmark execution is disabled in the public production demo.' });
+    return;
+  }
   const caseId = req.params.caseId as string;
   const currentCase = db.getCaseById(caseId);
 
@@ -29,6 +33,10 @@ benchmarkRouter.post('/run/:caseId', (req: Request, res: Response) => {
 
 // Run full suite on all available cases
 benchmarkRouter.post('/run-all', (_req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(403).json({ success: false, code: 'PUBLIC_DEMO_READ_ONLY', message: 'Benchmark execution is disabled in the public production demo.' });
+    return;
+  }
   const cases = db.getCases();
   const runs = cases.map(c => benchmarkService.runCaseBenchmark(c));
   const summary = benchmarkService.getSummary();
