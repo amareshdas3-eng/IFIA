@@ -279,3 +279,89 @@ test('Public Principals Directory does not disclose credentials or tokens', () =
   });
 });
 
+test('Principal-claim validation closes directory gap: rejects unknown usernames and every mismatched authoritative claim', () => {
+  const validPrincipal = CERTIFIED_PRINCIPALS['alex.henderson'];
+
+  // 1. Unknown principal username is rejected even if signature is valid
+  const unknownPrincipalToken = authService.generateSignedToken({
+    id: 'USR-UNKNOWN-999',
+    username: 'unknown.intruder',
+    name: 'Unknown Intruder',
+    role: 'LEAD_ELECTRICAL_ENGINEER',
+    department: 'Electrical Reliability & Asset Management',
+    licenseNumber: 'PE-104928-TX'
+  });
+  assert.strictEqual(
+    authService.verifyAuthToken(unknownPrincipalToken),
+    null,
+    'Unknown principal username must be rejected'
+  );
+
+  // 2. Mismatched ID is rejected
+  const mismatchedIdToken = authService.generateSignedToken({
+    ...validPrincipal,
+    id: 'USR-FORGED-ID'
+  });
+  assert.strictEqual(
+    authService.verifyAuthToken(mismatchedIdToken),
+    null,
+    'Mismatched principal ID must be rejected'
+  );
+
+  // 3. Mismatched Role is rejected
+  const mismatchedRoleToken = authService.generateSignedToken({
+    ...validPrincipal,
+    role: 'TECHNICIAN'
+  });
+  assert.strictEqual(
+    authService.verifyAuthToken(mismatchedRoleToken),
+    null,
+    'Mismatched principal role must be rejected'
+  );
+
+  // 4. Mismatched Name is rejected
+  const mismatchedNameToken = authService.generateSignedToken({
+    ...validPrincipal,
+    name: 'Forged Alex Impersonator'
+  });
+  assert.strictEqual(
+    authService.verifyAuthToken(mismatchedNameToken),
+    null,
+    'Mismatched principal name must be rejected'
+  );
+
+  // 5. Mismatched Department is rejected
+  const mismatchedDeptToken = authService.generateSignedToken({
+    ...validPrincipal,
+    department: 'Unregistered Rogue Department'
+  });
+  assert.strictEqual(
+    authService.verifyAuthToken(mismatchedDeptToken),
+    null,
+    'Mismatched principal department must be rejected'
+  );
+
+  // 6. Mismatched License Number is rejected
+  const mismatchedLicenseToken = authService.generateSignedToken({
+    ...validPrincipal,
+    licenseNumber: 'PE-FAKE-LICENSE'
+  });
+  assert.strictEqual(
+    authService.verifyAuthToken(mismatchedLicenseToken),
+    null,
+    'Mismatched license number must be rejected'
+  );
+
+  // 7. Legitimate token with all claims matching directory verifies cleanly
+  const legitimateToken = authService.generateSignedToken(validPrincipal);
+  const verified = authService.verifyAuthToken(legitimateToken);
+  assert.ok(verified, 'Authentic registered principal token must verify cleanly');
+  assert.strictEqual(verified?.id, validPrincipal.id);
+  assert.strictEqual(verified?.username, validPrincipal.username);
+  assert.strictEqual(verified?.name, validPrincipal.name);
+  assert.strictEqual(verified?.role, validPrincipal.role);
+  assert.strictEqual(verified?.department, validPrincipal.department);
+  assert.strictEqual(verified?.licenseNumber, validPrincipal.licenseNumber);
+});
+
+

@@ -185,21 +185,31 @@ export class AuthService {
         return null;
       }
 
-      // 5. Verify against Certified Principals directory to prevent forged claim payloads
+      // 5. Verify against Certified Principals directory to prevent forged claim payloads.
+      // Every valid engineering token MUST correspond to a registered, certified principal.
       const verifiedPrincipal = CERTIFIED_PRINCIPALS[decoded.username];
-      if (verifiedPrincipal) {
-        if (verifiedPrincipal.id !== decoded.id || verifiedPrincipal.role !== decoded.role) {
-          return null; // Claim tampering detected
-        }
+      if (!verifiedPrincipal) {
+        return null; // Unknown principal rejected
+      }
+
+      // 6. Cross-check ALL authoritative claims against registered directory
+      if (
+        verifiedPrincipal.id !== decoded.id ||
+        verifiedPrincipal.role !== decoded.role ||
+        verifiedPrincipal.name !== decoded.name ||
+        verifiedPrincipal.department !== decoded.department ||
+        (verifiedPrincipal.licenseNumber || '') !== (decoded.licenseNumber || '')
+      ) {
+        return null; // Authoritative claim mismatch / tampering detected
       }
 
       return {
-        id: decoded.id,
-        username: decoded.username,
-        name: decoded.name,
-        role: decoded.role,
-        licenseNumber: decoded.licenseNumber,
-        department: decoded.department,
+        id: verifiedPrincipal.id,
+        username: verifiedPrincipal.username,
+        name: verifiedPrincipal.name,
+        role: verifiedPrincipal.role,
+        licenseNumber: verifiedPrincipal.licenseNumber,
+        department: verifiedPrincipal.department,
         issuedAt: decoded.issuedAt
       };
     } catch {

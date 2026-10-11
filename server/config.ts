@@ -20,6 +20,9 @@ export function validateAuthSecretConfig(secret?: string, nodeEnv?: string): str
         '[SECURITY WARNING] Predictable default AUTH_SECRET detected. In production, this configuration will halt startup.'
       );
     }
+    // Note on Entropy: A 32-character minimum length does not by itself guarantee 256 bits
+    // of entropy unless generated via CSPRNG (e.g. 64 hex characters from crypto.randomBytes(32))
+    // and injected via external deployment secrets managers.
     if (secret.length < 32) {
       if (isProduction) {
         throw new Error(

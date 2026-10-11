@@ -13,7 +13,7 @@ import { auditRouter } from './routes/audit.js';
 import { authService, CERTIFIED_PRINCIPALS } from './services/authService.js';
 import { optionalAuthenticateUser } from './middleware/auth.js';
 
-const app = express();
+export const app = express();
 
 // Restrictive CORS Allowlist (IFIA-SEC-003)
 const corsOptions: cors.CorsOptions = {
@@ -138,12 +138,28 @@ if (fs.existsSync(clientDist)) {
   });
 }
 
-app.listen(config.port, () => {
-  console.log(`================================================================`);
-  console.log(`  IFIA - Industrial Failure Intelligence Agent Server Running   `);
-  console.log(`  Port: http://localhost:${config.port}                         `);
-  console.log(`  CMMS Mode: ${config.cmmsMode}                                 `);
-  console.log(`  Auth & Role Gates: ACTIVE (Engineering RBAC)                  `);
-  console.log(`  Live Claude API: ${config.anthropicApiKey ? 'ACTIVE' : 'FALLBACK_ENGINE (OFFLINE SAFE)'}`);
-  console.log(`================================================================`);
-});
+const isTestMode =
+  process.env.NODE_ENV === 'test' ||
+  process.env.npm_lifecycle_event === 'test' ||
+  process.argv.includes('--test') ||
+  Boolean(process.env.NODE_TEST_CONTEXT);
+
+const isDirectExecution = Boolean(
+  process.argv[1] &&
+    (process.argv[1].endsWith('server/index.ts') ||
+      process.argv[1].endsWith('server\\index.ts') ||
+      process.argv[1].endsWith('server/index.js') ||
+      process.argv[1].endsWith('server\\index.js'))
+);
+
+if (isDirectExecution && !isTestMode) {
+  app.listen(config.port, () => {
+    console.log(`================================================================`);
+    console.log(`  IFIA - Industrial Failure Intelligence Agent Server Running   `);
+    console.log(`  Port: http://localhost:${config.port}                         `);
+    console.log(`  CMMS Mode: ${config.cmmsMode}                                 `);
+    console.log(`  Auth & Role Gates: ACTIVE (Engineering RBAC)                  `);
+    console.log(`  Live Claude API: ${config.anthropicApiKey ? 'ACTIVE' : 'FALLBACK_ENGINE (OFFLINE SAFE)'}`);
+    console.log(`================================================================`);
+  });
+}
