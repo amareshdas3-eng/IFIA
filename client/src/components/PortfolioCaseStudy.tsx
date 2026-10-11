@@ -30,7 +30,7 @@ export const PortfolioCaseStudy: React.FC = () => {
           <Layers size={18} className="text-sky-400" /> 1. Executive Overview
         </h2>
         <p className="text-xs text-slate-300 leading-relaxed font-sans">
-          In heavy industrial, petrochemical, and power utility environments, catastrophic electrical equipment failures—such as 33 kV switchgear arc tracking, 40 MVA transformer DGA gas surges, and large boiler feed pump motor breakdowns—frequently incur hundreds of thousands of dollars per hour in production downtime. Traditional Root Cause Analysis (RCA) is a fragmented, 14-day manual process plagued by buried relay COMTRADE records, siloed SCADA sequence-of-events logs, and deferred maintenance documentation.
+          In heavy industrial, petrochemical, and power utility environments, catastrophic electrical equipment failures—such as 33 kV switchgear arc tracking, 40 MVA transformer DGA gas surges, and large boiler feed pump motor breakdowns—frequently cause prolonged operational outages. In the project's modeled petrochemical scenario (`RCA-2026-33KV-001`), synthetic inputs define an estimated 182-minute outage with a modeled downtime loss of $420,000. Conventional manual Root Cause Analysis (RCA) is modeled in our benchmark as a 336-hour comparison baseline reflecting multi-silo data gathering across protection relays, SCADA logs, and maintenance records.
         </p>
         <p className="text-xs text-slate-300 leading-relaxed font-sans">
           The <strong>Industrial Failure Intelligence Agent (IFIA)</strong> reimagines this workflow. Rather than deploying an unconstrained chatbot prone to hallucinating sensor readings or standards clauses, IFIA implements a strict <em>Evidence Contract</em>: <strong>The LLM proposes; evidence constrains; engineering standards guide; statistics qualify; policy governs; an authorized human engineer approves</strong>.
@@ -157,7 +157,7 @@ export const PortfolioCaseStudy: React.FC = () => {
             <thead>
               <tr className="border-b border-slate-800 text-slate-400 text-[10px] uppercase">
                 <th className="py-2">Metric</th>
-                <th className="py-2">Manual Baseline</th>
+                <th className="py-2">Defined Comparison Baseline</th>
                 <th className="py-2">Target Claim</th>
                 <th className="py-2 text-emerald-400">Measured (Synthetic Test Suite)</th>
                 <th className="py-2">Status</th>
@@ -166,7 +166,7 @@ export const PortfolioCaseStudy: React.FC = () => {
             <tbody className="divide-y divide-slate-800 text-[11px]">
               <tr>
                 <td className="py-2 text-slate-300">Elapsed Investigation Time</td>
-                <td className="py-2 text-slate-400">14 Days (336 hrs)</td>
+                <td className="py-2 text-slate-400">Defined 336 hrs (14 Days)</td>
                 <td className="py-2 text-sky-400">&lt; 3 Hours</td>
                 <td className="py-2 text-emerald-400 font-bold">1.1 Hours (42m AI + 25m Engineer)</td>
                 <td className="py-2 text-emerald-400 font-semibold">Substantiated in Sandbox</td>

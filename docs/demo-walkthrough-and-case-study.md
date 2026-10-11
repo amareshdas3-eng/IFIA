@@ -10,7 +10,7 @@
 
 ### Executive Summary
 
-In heavy industrial, petrochemical, and power utility facilities, catastrophic electrical equipment failures—such as 33 kV switchgear flashovers, 40 MVA transformer DGA gas surges, and large boiler feed pump motor breakdowns—frequently cause prolonged operational outages. In the project's modeled petrochemical switchgear incident (`RCA-2026-33KV-001`), the resulting 182-minute downstream cracker outage resulted in an estimated $420,000 production loss.
+In heavy industrial, petrochemical, and power utility facilities, catastrophic electrical equipment failures—such as 33 kV switchgear flashovers, 40 MVA transformer DGA gas surges, and large boiler feed pump motor breakdowns—frequently cause prolonged operational outages. In the project's modeled petrochemical switchgear incident (`RCA-2026-33KV-001`), synthetic scenario inputs define an estimated 182-minute outage with a modeled downtime loss of $420,000.
 
 Traditional industrial Root Cause Analysis (RCA) is a multi-silo manual exercise where compiling numerical relay COMTRADE disturbance records, SCADA sequence-of-events logs, and deferred maintenance history often takes weeks. For benchmarking, this investigation latency is modeled as a 336-hour (14-day) manual comparison baseline.
 
@@ -27,12 +27,12 @@ IFIA was validated across five synthetic, highly authentic industrial electrical
 
 ```mermaid
 graph TD
-    A[Industrial Ingestion: COMTRADE, DGA, SCADA, Borescope] --> B[Evidence Contract: UTC Normalization & Contradiction Flagging]
-    B --> C[Reasoning Engine: Fault Timeline & Competing Hypotheses]
-    C --> D[Red-Team QA Auditor: Prompt 6 Adversarial Check & Traceability Score]
-    D --> E[Human Governance: Licensed PE Sign-Off Modal]
-    E --> F[CMMS Adapter: Idempotent Work Order Draft with LOTO Hold Points]
-    F --> G[Cryptographic Audit Trail: Chained SHA-256 Record]
+    A["Industrial Ingestion: COMTRADE, DGA, SCADA, Borescope"] --> B["Evidence Contract: UTC Normalization & Contradiction Flagging"]
+    B --> C["Reasoning Engine: Fault Timeline & Competing Hypotheses"]
+    C --> D["Red-Team QA Auditor: Prompt 6 Adversarial Check & Citation Trace"]
+    D --> E["Human Governance: Authorized Engineering Approval Modal"]
+    E --> F["CMMS Adapter: Idempotent Work Order Draft with LOTO Hold Points"]
+    F --> G["Cryptographic Audit Trail: Chained SHA-256 Record"]
 ```
 
 #### The 5 Pre-Seeded Industrial Electrical Failure Scenarios
@@ -105,17 +105,17 @@ Use this 5-minute walkthrough structure when presenting IFIA to plant managers, 
 +-------------------------------------------------------------------------------+
 |                      IFIA 5-MINUTE EXECUTIVE WALKTHROUGH                      |
 +-------------------------------------------------------------------------------+
-|  ACT 1: The Problem  | High-voltage trip; $420k loss; 14-day manual lag.      |
+|  ACT 1: The Problem  | High-voltage trip; $420k modeled outage; 336h baseline.|
 |  ACT 2: Ingestion    | Evidence Explorer links COMTRADE, DGA, physical logs.  |
 |  ACT 3: Reasoning    | Karl Popper Falsification & Prompt 6 Red-Team Audit.   |
-|  ACT 4: Governance   | Licensed PE Sign-Off Modal with cryptographic log.    |
+|  ACT 4: Governance   | Engineering Sign-Off Modal with cryptographic log.     |
 |  ACT 5: CMMS Safety  | Sandboxed work order draft with mandatory LOTO points. |
 +-------------------------------------------------------------------------------+
 ```
 
 #### Act 1: The High-Stakes Industrial Challenge (Minute 0:00 – 1:00)
 - **Visual:** Open the live IFIA dashboard at `https://ifia-proengineering-demo.onrender.com`.
-- **Narration:** *"In our modeled petrochemical incident (`RCA-2026-33KV-001`), an uncontained Phase-B busbar flashover caused an estimated $420,000 in downtime. In conventional utility practice, assembling fragmented COMTRADE records, DGA gas chromatography, and shift logs across disparate engineering departments routinely takes up to two weeks (modeled in our benchmark as a 336-hour comparison baseline). Under pressure to restore power, plants frequently re-energize before finding the true root cause, risking repeat catastrophic flashovers."*
+- **Narration:** *"In our modeled petrochemical incident (`RCA-2026-33KV-001`), scenario inputs define an uncontained Phase-B busbar flashover with an estimated $420,000 outage impact. In conventional utility practice, assembling fragmented COMTRADE records, DGA gas chromatography, and shift logs across disparate engineering departments routinely takes up to two weeks (modeled in our benchmark as a 336-hour comparison baseline). Under pressure to restore power, plants frequently re-energize before finding the true root cause, risking repeat catastrophic flashovers."*
 
 #### Act 2: The Evidence Explorer & Fault Timeline (Minute 1:00 – 2:00)
 - **Action:** Select case **`RCA-2026-33KV-001`** and navigate to the **Evidence Explorer** and **Timeline View**.
@@ -130,11 +130,11 @@ Use this 5-minute walkthrough structure when presenting IFIA to plant managers, 
 
 #### Act 4: Human Governance & Engineering Sign-Off (Minute 3:15 – 4:15)
 - **Action:** Open the **Approval Governance Modal** and review the **3-Tier Fault Tree**.
-- **Narration:** *"In regulated industrial environments, AI must never make unilateral decisions. IFIA requires a certified Professional Engineer (PE) to review the fault tree, confirm latent organizational root causes (e.g. deferred turnaround work orders), and input formal review credentials. Every approval is cryptographically chained into an immutable SHA-256 audit ledger."*
+- **Narration:** *"In regulated industrial environments, AI must never make unilateral decisions. IFIA requires an authorized engineering lead to review the fault tree, confirm latent organizational root causes (e.g. deferred turnaround work orders), and input formal review credentials. Every approval is cryptographically chained into an immutable SHA-256 audit ledger."*
 
 #### Act 5: Safe CMMS Dispatch with LOTO Hold Points (Minute 4:15 – 5:00)
 - **Action:** Open the **CMMS Work Order Modal**.
-- **Narration:** *"Once approved, IFIA drafts an idempotent work order for enterprise maintenance systems (SAP PM or IBM Maximo). Crucially, the system cannot actuate live breakers: it is air-gapped in sandbox mode. Every draft automatically embeds OSHA/NFPA 70B Lockout/Tagout prerequisites—including proving zero voltage and applying portable earthing clusters—along with witnessed hold points before re-energization."*
+- **Narration:** *"Once approved, IFIA drafts an idempotent work order for enterprise maintenance systems (SAP PM or IBM Maximo). Crucially, the system cannot actuate live switchgear: it enforces a strict software-isolated sandbox simulation mode with zero live SCADA/switchgear write access. Every draft automatically embeds OSHA/NFPA 70B Lockout/Tagout prerequisites—including proving zero voltage and applying portable earthing clusters—along with witnessed hold points before re-energization."*
 
 ---
 
@@ -173,7 +173,7 @@ To uphold engineering credibility, **target claims are strictly distinguished fr
 #### Quantified Impact Metrics for Resumes & CVs
 - *Architected and deployed IFIA, an industrial AI platform automating Root Cause Analysis (RCA) for critical high-voltage assets (33 kV switchgear, 40 MVA transformers, 145 kV GIS), demonstrating 1.1 hours investigation turnaround against a project-defined 336-hour comparison baseline in synthetic benchmark trials.*
 - *Implemented an Evidence Contract framework using Karl Popper falsification, enforcing 96.2% raw-evidence traceability and detecting 0 fabricated citations in the test suite via automated Prompt 6 adversarial auditing.*
-- *Engineered human-in-the-loop safety governance requiring licensed Professional Engineer sign-offs, chained SHA-256 cryptographic audit ledgers, and air-gapped CMMS work order generation with mandatory NFPA 70B Lockout/Tagout (LOTO) hold points.*
+- *Engineered human-in-the-loop safety governance requiring authorized engineering role approvals with license record verification, chained SHA-256 cryptographic audit ledgers, and software-isolated sandbox CMMS work order generation with mandatory NFPA 70B Lockout/Tagout (LOTO) hold points.*
 - *Containerized full-stack application to Render with automated CI/CD across Node.js 20 & 22, passing 23 security, RBAC, and contract validation tests.*
 
 #### LinkedIn & Executive Summary Announcement Snippet
@@ -184,8 +184,8 @@ To uphold engineering credibility, **target claims are strictly distinguished fr
 > I built **IFIA** to compress this process to under 2 hours in synthetic validation without sacrificing engineering rigor. Unlike open-ended conversational chatbots, IFIA is built on an **Evidence Contract**:
 > - 🔍 **Popperian Falsification:** Competing physical failure hypotheses evaluated side-by-side.
 > - 🛡️ **Zero Fabricated Citations in Test Suite:** Automated Prompt 6 adversarial auditing checks every claim against raw evidence IDs (`EV-xxx`).
-> - 🔒 **Human-in-the-Loop PE Governance:** Mandatory engineering license sign-off with cryptographically chained SHA-256 audit records.
-> - ⚡ **Safe CMMS Work Orders:** Air-gapped sandbox generation with mandatory Lockout/Tagout (LOTO) hold points.
+> - 🔒 **Human-in-the-Loop Engineering Governance:** Mandatory authorized engineer approval with verified license records and cryptographically chained SHA-256 audit records.
+> - ⚡ **Safe CMMS Work Orders:** Software-isolated sandbox simulation with mandatory Lockout/Tagout (LOTO) hold points.
 > 
 > 🌐 Check out the live interactive demo: `https://ifia-proengineering-demo.onrender.com`
 
@@ -202,5 +202,5 @@ To transition the public ProEngineering site from "Coming Soon" to public launch
 | **Missing Meta Description** | SEO | 83/100 | Add a concise, 150-character meta description highlighting industrial electrical consulting, project engineering, and AI delivery. |
 | **Responsive Image Sizing** | Performance | 87/100 | Add `srcset` attributes and explicit `width`/`height` dimensions on hero diagrams and equipment schematics to eliminate layout shifts (CLS). |
 | **Invalid `robots.txt`** | SEO | 83/100 | Correct syntax formatting in WordPress `robots.txt` to properly disallow administrative directories while allowing search engine crawler indexing. |
-| **Draft Synchronization** | Content Governance | Draft (Post ID 39) | Synchronize WordPress Draft Post ID 39 against commit `054f766` on `ifia/source-import-initial` before public publication. |
+| **Draft Synchronization** | Content Governance | Draft (Post ID 39) | Synchronize WordPress Draft Post ID 39 against the latest documentation revision on review branch `ifia/source-import-initial` before public publication. |
 

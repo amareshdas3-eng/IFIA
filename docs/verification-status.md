@@ -78,7 +78,7 @@ The benchmark data is documented with scientific rigor to distinguish between ta
 - **Evidence Scale:** 26 multi-modal records (COMTRADE, DGA, SCADA SOE, borescope, maintenance logs), 9 competing physical hypotheses, 5 fault trees.
 - **Baseline Definition:** The project-defined 336-hour (14-day) manual comparison baseline models multi-department data gathering across protection relays, DCS event logs, DGA labs, and vendor reports.
 - **Measured Outcomes:**
-  - Elapsed turnaround: **1.1 hours** (42 min AI + 25 min PE review) vs project-defined 336-hour comparison baseline (**99.7% reduction**).
+  - Elapsed turnaround: **1.1 hours** (42 min AI + 25 min engineer review) vs project-defined 336-hour comparison baseline (**99.7% reduction**).
   - Senior engineer labor: **0.8 staff-hours** per incident vs 12.0 hours manual.
   - Evidence citation traceability: **96.2%** of material claims cite verified `EV-xxx` records.
   - Test suite fabricated citations: **0** (0 fabricated citations detected in test suite; open-domain hallucination risk remains non-zero without human review).
@@ -88,7 +88,7 @@ The benchmark data is documented with scientific rigor to distinguish between ta
 
 ## 5. ProEngineering Portfolio Launch Readiness
 
-- **WordPress Case Study Draft:** Post ID 39 updated with revised methodology from commit `af30624`.
+- **WordPress Case Study Draft:** Post ID 39 updated with revised methodology from review branch `ifia/source-import-initial`.
 - **Render Demo Baseline:** Live and frozen at `https://ifia-proengineering-demo.onrender.com`.
 - **Public Website State:** Coming Soon mode preserved pending visual review and resolution of the 5 Lighthouse audit items:
   1. WCAG 2.1 AA color contrast compliance.
