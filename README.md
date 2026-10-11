@@ -268,7 +268,7 @@ d:/Electrical/RCA AGENT/
    ```
    *If left empty, IFIA automatically runs in high-fidelity offline mode using its built-in industrial electrical reasoning engine.*
 
-4. **Run the automated test suite:**
+5. **Run the automated test suite:**
    ```bash
    npm test
    ```
