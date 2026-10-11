@@ -119,7 +119,7 @@ Use this 5-minute walkthrough structure when presenting IFIA to plant managers, 
 
 #### Act 2: The Evidence Explorer & Fault Timeline (Minute 1:00 – 2:00)
 - **Action:** Select case **`RCA-2026-33KV-001`** and navigate to the **Evidence Explorer** and **Timeline View**.
-- **Narration:** *"IFIA normalizes multi-modal industrial data—from numerical protection relays (SEL-751), SCADA sequence of events, and maintenance logs. Notice that every piece of data is assigned an immutable ID like `EV-001`. The timeline synchronizes microsecond relay events with environmental sensor drops (relative humidity jumping to 99.4%) and deferred maintenance records."*
+- **Narration:** *"IFIA normalizes multi-modal industrial data—from numerical protection relays (SEL-751), SCADA sequence of events, and maintenance logs. Notice that every ingested record is assigned a canonical identifier like `EV-001`. The timeline synchronizes microsecond relay events with environmental sensor drops (relative humidity jumping to 99.4%) and deferred maintenance records."*
 
 #### Act 3: Popperian Falsification & Red-Team QA (Minute 2:00 – 3:15)
 - **Action:** Switch to the **Hypothesis Matrix** and **QA Red-Team Panel**.
@@ -130,7 +130,7 @@ Use this 5-minute walkthrough structure when presenting IFIA to plant managers, 
 
 #### Act 4: Human Governance & Engineering Sign-Off (Minute 3:15 – 4:15)
 - **Action:** Open the **Approval Governance Modal** and review the **3-Tier Fault Tree**.
-- **Narration:** *"In regulated industrial environments, AI must never make unilateral decisions. IFIA requires an authorized engineering lead to review the fault tree, confirm latent organizational root causes (e.g. deferred turnaround work orders), and input formal review credentials. Every approval is cryptographically chained into an immutable SHA-256 audit ledger."*
+- **Narration:** *"In regulated industrial environments, AI must never make unilateral decisions. IFIA requires an authorized engineering lead to review the fault tree, confirm latent organizational root causes (e.g. deferred turnaround work orders), and input formal review credentials. Every approval is cryptographically chained into a tamper-detectable SHA-256 audit ledger."*
 
 #### Act 5: Safe CMMS Dispatch with LOTO Hold Points (Minute 4:15 – 5:00)
 - **Action:** Open the **CMMS Work Order Modal**.

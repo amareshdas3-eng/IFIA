@@ -44,21 +44,21 @@ export const PortfolioCaseStudy: React.FC = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-            <h3 className="font-bold text-rose-400 uppercase tracking-wider text-[11px]">The Legacy 14-Day Investigation Bottleneck</h3>
+            <h3 className="font-bold text-rose-400 uppercase tracking-wider text-[11px]">Project-Defined Comparison Baseline (336 Hours)</h3>
             <ul className="space-y-1.5 text-slate-300 list-disc list-inside leading-relaxed">
               <li>Numerical relay disturbance recordings (COMTRADE) remain isolated in proprietary substation software.</li>
               <li>Operator shift logbooks contain unverified assumptions (e.g. attributing internal flashovers to external lightning).</li>
               <li>Historical work orders identifying deferred repairs are overlooked until catastrophic failure occurs.</li>
-              <li>Engineers spend ~10 to 14 staff-hours per incident merely compiling data across disconnected silos.</li>
+              <li>Modeled comparison effort assumes ~10 to 14 staff-hours per incident to compile data across disconnected silos.</li>
             </ul>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
-            <h3 className="font-bold text-emerald-400 uppercase tracking-wider text-[11px]">The IFIA Engineering Target</h3>
+            <h3 className="font-bold text-emerald-400 uppercase tracking-wider text-[11px]">Target Engineering Workflow & Measured Sandbox Results</h3>
             <ul className="space-y-1.5 text-slate-300 list-disc list-inside leading-relaxed">
-              <li>Compress elapsed investigation duration from <strong>14 days to under 3 hours</strong>.</li>
+              <li>Target investigation turnaround under 3 hours (measured 1.1 hours across 5-case synthetic test suite).</li>
               <li>Enforce 100% evidence linkage for every material causal claim via verified <code>EV-xxx</code> identifiers.</li>
-              <li>Reduce senior engineering labor by <strong>~9 to 11 hours per case</strong> through automated timeline and hypothesis reconstruction.</li>
+              <li>Estimated engineering labor savings of ~9 to 11 hours per case against modeled baseline through automated timeline synthesis.</li>
               <li>Directly dispatch draft work orders to plant CMMS (IBM Maximo / SAP PM) with mandatory Lockout/Tagout hold points.</li>
             </ul>
           </div>
@@ -134,11 +134,11 @@ export const PortfolioCaseStudy: React.FC = () => {
           </div>
           <div className="flex items-start gap-2">
             <CheckCircle2 size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-            <span><strong>Prompt Injection Shield:</strong> All incoming document logs and text files are sanitized server-side, preventing prompt injection attacks from malicious maintenance logs.</span>
+            <span><strong>Prompt Injection Shield:</strong> All incoming document logs and text files are sanitized server-side, designed to mitigate prompt injection attempts from untrusted maintenance text.</span>
           </div>
           <div className="flex items-start gap-2">
             <CheckCircle2 size={14} className="text-emerald-400 mt-0.5 flex-shrink-0" />
-            <span><strong>Idempotency Enforcement:</strong> Work order dispatches enforce cryptographic UUID keys to guarantee zero duplicate work orders in enterprise CMMS databases.</span>
+            <span><strong>Idempotency Enforcement:</strong> Work order dispatches enforce cryptographic UUID keys, using idempotency controls to prevent duplicate submissions in enterprise CMMS databases.</span>
           </div>
         </div>
       </div>
