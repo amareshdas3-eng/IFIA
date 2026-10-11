@@ -22,7 +22,6 @@ const corsOptions: cors.CorsOptions = {
     if (
       !origin ||
       config.allowedOrigins.includes(origin) ||
-      config.allowedOrigins.includes('*') ||
       config.nodeEnv === 'development'
     ) {
       callback(null, true);
@@ -55,8 +54,17 @@ if (db.getCases().length === 0) {
   console.log('Seeded initial synthetic industrial electrical cases.');
 }
 
-// Issue Cryptographically Signed Engineering Bearer Token
+// Demo-only token issuance. Never issue production identities from a client-supplied username.
 app.post('/api/auth/token', (req, res) => {
+  if (config.nodeEnv === 'production') {
+    res.status(404).json({
+      success: false,
+      code: 'DEMO_TOKEN_ISSUANCE_DISABLED',
+      message: 'Demo persona token issuance is disabled in production. Configure a verified identity provider.'
+    });
+    return;
+  }
+
   const { username } = req.body || {};
   if (!username || typeof username !== 'string') {
     res.status(400).json({
