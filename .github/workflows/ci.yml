@@ -15,8 +15,6 @@ jobs:
       matrix:
         node-version: [20, 22]
 
-    env:
-      AUTH_SECRET: 'ci-testing-256-bit-cryptographic-security-token-key-2026'
 
     steps:
       - name: Checkout repository
