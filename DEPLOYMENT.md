@@ -51,6 +51,21 @@ The container binds to loopback only. Put it behind a managed HTTPS reverse prox
 6. Add the subdomain in the hosting panel and follow its DNS/SSL instructions. Keep the current WordPress domain and files intact.
 7. Verify the deployment logs and `/api/health`, then test the dashboard, authorization failure paths, data persistence after restart, and backup restoration.
 
+## Render free-tier demo (no DNS changes)
+
+Use this path only when Hostinger does not offer a Node.js app. The repository includes `render.yaml` for a temporary demo service on Render's free web-service tier.
+
+1. Open the Render dashboard and choose **New → Blueprint** (or use Render's Blueprint creation flow).
+2. Connect `amareshdas3-eng/IFIA`, select branch `ifia/source-import-initial`, and review the Blueprint from `render.yaml`.
+3. Confirm the service is named `ifia-proengineering-demo` and the plan is **Free**. The Blueprint creates only one web service; it does not add a database, change DNS, or modify Hostinger/WordPress.
+4. When prompted for `ALLOWED_ORIGINS`, enter the exact HTTPS origin Render assigns to this service (for example, `https://ifia-proengineering-demo.onrender.com` only if that is the actual URL shown in your dashboard). Do not include a trailing slash or guess the final hostname.
+5. Let Render generate `AUTH_SECRET`. Do not add an Anthropic API key or real industrial credentials for this initial demo.
+6. Review the cost/plan screen carefully. If the dashboard requires a paid plan, payment method, or upgrade to proceed, stop and do not approve it.
+7. Deploy, then open the assigned HTTPS URL and check `/api/health`. Verify the UI and confirm `POST /api/auth/token` returns `DEMO_TOKEN_ISSUANCE_DISABLED` in production.
+8. Keep the demo for synthetic sample data only. The configured `STORAGE_DIR=/tmp/ifia-data` is intentionally ephemeral; cases, audit records, and benchmark history may be lost after restarts, spin-downs, or redeploys. Do not use it for real records or rely on it for audit retention.
+
+The free service can spin down after inactivity and may take about a minute to wake. It is for preview/testing, not production operations. Keep the ProEngineering root domain and all existing DNS records unchanged. Do not add `ifia.proengineering.in` until the temporary service is verified and you explicitly approve a subdomain-only DNS change.
+
 ## Known production gates before public operational use
 
 - Replace demo identity selection with OIDC or another real identity provider; map identities to server-controlled roles and enforce provisioning/deprovisioning.
