@@ -17,8 +17,12 @@ casesRouter.get('/', (_req: Request, res: Response) => {
   res.json({ success: true, count: cases.length, cases });
 });
 
-// Seed or reset synthetic cases
+// Seed or reset synthetic cases (development/demo only)
 casesRouter.post('/seed', (_req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(404).json({ success: false, code: 'DEMO_MUTATION_DISABLED', message: 'Synthetic case reset is disabled in production.' });
+    return;
+  }
   syntheticCases.forEach(c => db.saveCase(c));
   const cases = db.getCases();
   res.json({ success: true, message: 'Seeded synthetic industrial electrical cases', cases });
@@ -37,6 +41,10 @@ casesRouter.get('/:id', (req: Request, res: Response) => {
 
 // Create new case and run investigation
 casesRouter.post('/', async (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(403).json({ success: false, code: 'PUBLIC_DEMO_READ_ONLY', message: 'Case creation is disabled until production identity and abuse controls are configured.' });
+    return;
+  }
   try {
     const {
       title,
