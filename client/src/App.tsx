@@ -116,7 +116,12 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     fetchData();
-    obtainTokenForPersona('alex.henderson');
+    if (import.meta.env.PROD) {
+      setActiveUsername('anonymous');
+      setActiveToken('');
+    } else {
+      obtainTokenForPersona('alex.henderson');
+    }
   }, []);
 
   const currentCase = cases.find((c) => c.case_id === currentCaseId) || cases[0] || null;
@@ -260,7 +265,14 @@ export const App: React.FC = () => {
         activeUsername={activeUsername}
         onSelectPersona={obtainTokenForPersona}
         onVerifyAuditTrail={handleVerifyAuditTrail}
+        publicDemoMode={import.meta.env.PROD}
       />
+
+      {import.meta.env.PROD && (
+        <div role="status" className="border-b border-sky-700/50 bg-sky-950/70 px-4 py-3 text-center text-sm text-sky-100">
+          <strong>Public demonstration — read-only mode.</strong> Sample industrial cases and reports are illustrative. Sign-off, case intake, benchmark execution, and CMMS actions are disabled until verified user login is configured.
+        </div>
+      )}
 
       {/* Main Tab Navigation */}
       <Navigation
