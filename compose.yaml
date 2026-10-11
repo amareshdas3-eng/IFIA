@@ -1,0 +1,41 @@
+services:
+  ifia:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ifia:staging
+    container_name: ifia-staging
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in the deployment environment}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?Set ALLOWED_ORIGINS to the exact HTTPS app origin}
+      CMMS_MODE: SANDBOX
+      REQUIRE_HUMAN_APPROVAL_FOR_CMMS: "true"
+      ENABLE_PROMPT_INJECTION_SHIELD: "true"
+      STORAGE_DIR: /app/data_store
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-3-7-sonnet-20250219}
+    volumes:
+      - ifia_data:/app/data_store
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  ifia_data:
