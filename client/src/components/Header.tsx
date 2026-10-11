@@ -58,6 +58,7 @@ interface HeaderProps {
   activeUsername: string;
   onSelectPersona: (username: string) => void;
   onVerifyAuditTrail: () => void;
+  publicDemoMode?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -69,7 +70,8 @@ export const Header: React.FC<HeaderProps> = ({
   onPrintReport,
   activeUsername,
   onSelectPersona,
-  onVerifyAuditTrail
+  onVerifyAuditTrail,
+  publicDemoMode = false
 }) => {
   const currentPersona = AVAILABLE_PERSONAS.find(p => p.username === activeUsername) || AVAILABLE_PERSONAS[0];
 
@@ -131,8 +133,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Certified Principal Identity & Controls */}
         <div className="flex flex-wrap items-center gap-2">
-          {/* Persona RBAC Selector */}
-          <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs">
+          {/* Demo personas are never exposed as login choices in production. */}
+          {!publicDemoMode && <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs">
             <KeyRound size={13} className={currentPersona.isAuthorizedToApprove ? "text-emerald-400" : "text-amber-400"} />
             <span className="text-slate-400 hidden lg:inline">Caller Principal:</span>
             <select
@@ -147,7 +149,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </option>
               ))}
             </select>
-          </div>
+          </div>}
 
           {currentCase && getStatusBadge(currentCase.case_status)}
 
@@ -175,21 +177,21 @@ export const Header: React.FC<HeaderProps> = ({
               <UserCheck size={13} /> Verify Audit Trail
             </button>
 
-            <button
+            {!publicDemoMode && <button
               onClick={onNewCase}
               className="px-2.5 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold flex items-center gap-1 transition shadow-sm"
               title="Intake new failure event"
             >
               <PlusCircle size={14} /> Intake Case
-            </button>
+            </button>}
 
-            <button
+            {!publicDemoMode && <button
               onClick={onResetSeed}
               className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs transition"
               title="Reload synthetic industrial cases"
             >
               <RotateCw size={14} />
-            </button>
+            </button>}
 
             <button
               onClick={onPrintReport}
