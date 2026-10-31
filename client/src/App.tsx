@@ -1,3 +1,5 @@
+import bundledCases from './data/cases.json';
+import bundledBenchmarkRuns from './data/benchmark_runs.json';
 import React, { useState, useEffect } from 'react';
 import { RCACase, BenchmarkSummary, BenchmarkRun } from './types';
 import { Header } from './components/Header';
@@ -26,7 +28,7 @@ import {
 } from 'lucide-react';
 
 export const App: React.FC = () => {
-  const [cases, setCases] = useState<RCACase[]>([]);
+  const [cases, setCases] = useState<RCACase[]>((bundledCases as any) || []);
   const [currentCaseId, setCurrentCaseId] = useState<string>('');
   const [activeTab, setActiveTab] = useState<NavTab>('overview');
   const [benchmarkSummary, setBenchmarkSummary] = useState<BenchmarkSummary>({
@@ -108,7 +110,16 @@ export const App: React.FC = () => {
         setBenchmarkRuns(runsData.runs);
       }
     } catch (err) {
-      console.error('Failed to fetch data from IFIA backend:', err);
+      console.warn('IFIA backend server unavailable, activating instant offline evidence store:', err);
+      if (bundledCases && Array.isArray(bundledCases) && bundledCases.length > 0) {
+        setCases(bundledCases as any);
+        if (!currentCaseId) {
+          setCurrentCaseId(bundledCases[0].case_id);
+        }
+      }
+      if (bundledBenchmarkRuns && Array.isArray(bundledBenchmarkRuns)) {
+        setBenchmarkRuns(bundledBenchmarkRuns as any);
+      }
     } finally {
       setIsLoading(false);
     }
